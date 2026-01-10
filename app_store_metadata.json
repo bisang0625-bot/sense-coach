@@ -1,0 +1,183 @@
+{
+  "app_name": "눈치코치 - Sense Coach",
+  "subtitle": "현지 학교 알림장 행간 읽기 AI 비서",
+  "version": "1.0.0",
+  "build_number": "1",
+  "bundle_id": "com.sensecoach.app",
+  "package_name": "com.sensecoach.app",
+  
+  "category": {
+    "ios": "Education",
+    "android": "Education"
+  },
+  
+  "age_rating": {
+    "ios": "4+",
+    "android": "Everyone"
+  },
+  
+  "pricing": "Free",
+  
+  "short_description": {
+    "ko": "현지 학교 알림장을 AI가 분석하여 중요 정보만 요약해 드립니다",
+    "en": "AI-powered school notice analyzer for Korean parents living abroad"
+  },
+  
+  "keywords": {
+    "ko": "학교알림장, 학교공지, 교육, 해외생활, 이민, 육아, 학부모, AI비서, 번역, 일정관리",
+    "en": "school notice, education, parenting, expat, AI assistant, translation, schedule"
+  },
+  
+  "support_url": "https://github.com/yourusername/sense-coach",
+  "privacy_policy_url": "https://your-domain.com/privacy-policy",
+  "terms_of_service_url": "https://your-domain.com/terms-of-service",
+  
+  "contact": {
+    "email": "support@sensecoach.app",
+    "website": "https://sensecoach.app"
+  },
+  
+  "features": [
+    {
+      "ko": "텍스트 및 이미지 자동 분석",
+      "en": "Automatic text and image analysis"
+    },
+    {
+      "ko": "일정 자동 추출 및 저장",
+      "en": "Automatic schedule extraction and saving"
+    },
+    {
+      "ko": "준비물 체크리스트 생성",
+      "en": "Checklist generation for required items"
+    },
+    {
+      "ko": "현지 문화 맥락 설명",
+      "en": "Local cultural context explanation"
+    },
+    {
+      "ko": "자녀별 일정 관리",
+      "en": "Schedule management by child"
+    },
+    {
+      "ko": "스마트 대시보드",
+      "en": "Smart dashboard"
+    }
+  ],
+  
+  "supported_countries": [
+    "Netherlands",
+    "United States",
+    "Germany",
+    "United Kingdom",
+    "Others"
+  ],
+  
+  "supported_languages": [
+    "ko",
+    "en"
+  ],
+  
+  "screenshots": {
+    "locations": [
+      "assets/screenshots/iphone_6.7/",
+      "assets/screenshots/iphone_6.5/",
+      "assets/screenshots/ipad_pro_12.9/",
+      "assets/screenshots/android_phone/",
+      "assets/screenshots/android_tablet/"
+    ],
+    "naming_convention": "screenshot_[number]_[language].png"
+  },
+  
+  "app_icon": {
+    "source": "assets/app_icon/icon_1024x1024.png",
+    "background_color": "#FFB6C1",
+    "requires_multiple_sizes": true
+  },
+  
+  "required_permissions": {
+    "ios": [
+      "NSPhotoLibraryUsageDescription: 학교 알림장 사진을 업로드하기 위해 사진 라이브러리 접근이 필요합니다.",
+      "NSCameraUsageDescription: 학교 알림장을 직접 촬영하기 위해 카메라 접근이 필요합니다."
+    ],
+    "android": [
+      "android.permission.INTERNET",
+      "android.permission.ACCESS_NETWORK_STATE",
+      "android.permission.READ_EXTERNAL_STORAGE",
+      "android.permission.CAMERA"
+    ]
+  },
+  
+  "test_account": {
+    "note": "심사를 위한 테스트 계정 정보를 여기에 추가하세요",
+    "username": "test@sensecoach.app",
+    "password": "TestPassword123!",
+    "api_key": "configured_in_environment",
+    "special_instructions": "API 키는 환경 변수로 설정되어 있습니다. 샘플 데이터가 자동으로 로드됩니다."
+  },
+  
+  "release_notes": {
+    "1.0.0": {
+      "ko": "🎉 눈치코치 첫 출시!\n\n✨ 주요 기능:\n• AI 기반 학교 알림장 분석\n• 텍스트 및 이미지 자동 인식\n• 일정 자동 추출 및 저장\n• 준비물 체크리스트\n• 현지 문화 맥락 설명\n• 자녀별 일정 관리\n• 스마트 대시보드",
+      "en": "🎉 First release of Sense Coach!\n\n✨ Key Features:\n• AI-powered school notice analysis\n• Automatic text and image recognition\n• Automatic schedule extraction and saving\n• Checklist for required items\n• Local cultural context explanation\n• Schedule management by child\n• Smart dashboard"
+    }
+  },
+  
+  "localization": {
+    "primary_language": "ko",
+    "supported_languages": ["ko", "en"],
+    "rtl_support": false
+  },
+  
+  "in_app_purchases": false,
+  "contains_ads": false,
+  
+  "data_usage": {
+    "collects_data": true,
+    "data_types": [
+      "Schedule information",
+      "Uploaded images",
+      "Text input",
+      "Device information"
+    ],
+    "data_purposes": [
+      "Service provision",
+      "Service improvement",
+      "Error analysis"
+    ],
+    "data_sharing": [
+      {
+        "partner": "Google (Gemini API)",
+        "purpose": "AI analysis",
+        "data_types": ["Text", "Images"]
+      }
+    ],
+    "encryption": true,
+    "can_request_deletion": true
+  },
+  
+  "marketing": {
+    "tagline": {
+      "ko": "학교 알림장, 이제 AI가 읽어드립니다",
+      "en": "AI reads your school notices for you"
+    },
+    "target_audience": "Korean parents living abroad with school-age children",
+    "unique_selling_points": [
+      "AI-powered automatic analysis",
+      "Cultural context explanation",
+      "Multi-child schedule management",
+      "Smart dashboard with D-day counter"
+    ]
+  },
+  
+  "technical_details": {
+    "framework": "Streamlit",
+    "backend": "Python 3.9+",
+    "ai_service": "Google Gemini API",
+    "database": "SQLite3 (local)",
+    "deployment": "Streamlit Cloud / Docker",
+    "min_os_version": {
+      "ios": "13.0",
+      "android": "6.0 (API 23)"
+    }
+  }
+}
