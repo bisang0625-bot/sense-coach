@@ -709,9 +709,14 @@ def main():
         </div>
     """, unsafe_allow_html=True)
     st.markdown("---")
-    
+    # --- 메인 본문 ---
+    # 페이월(프리미엄 혜택)이 활성화된 경우 최상단에서 렌더링하고 다른 콘텐츠 중단
+    if st.session_state.get('show_paywall', False):
+        render_paywall()
+        st.stop()
+        
     # 탭 생성
-    tab1, tab2 = st.tabs(["📝 분석하기", "📅 나의 일정 (Dashboard)"])
+    tab1, tab2 = st.tabs(["🔍 분석하기 (Analysis)", "📅 나의 일정 (Dashboard)"])
     
     with tab1:
         # 텍스트 입력
@@ -736,10 +741,6 @@ def main():
         
         st.markdown("---")
         
-        if st.session_state.get('show_paywall', False):
-            render_paywall()
-            st.stop()
-            
         # 분석 버튼
         analyze_button = st.button("🔍 분석하기", use_container_width=True)
         

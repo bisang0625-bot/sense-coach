@@ -70,29 +70,61 @@ def render_membership_sidebar():
 
 def render_paywall():
     """페이월(결제 안내) 팝업/화면"""
-    st.markdown("---")
-    st.markdown("## 💎 눈치코치 프리미엄 멤버십")
+    # 중앙 정렬 및 프리미엄 느낌을 위한 스타일링
+    st.markdown("""
+        <div style="text-align: center; padding: 2rem 0;">
+            <h1 style="color: #6c5ce7; margin-bottom: 0.5rem;">💎 눈치코치 프리미엄</h1>
+            <p style="font-size: 1.2rem; color: #636e72;">더 똑똑하고 자유로운 알림장 분석을 시작하세요</p>
+        </div>
+    """, unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2)
+    # 혜택 카드
+    col1, col2 = st.columns(2, gap="large")
     
     with col1:
-        st.markdown(f"### {PLANS['FREE']['name']}")
-        st.write(PLANS['FREE']['description'])
-        for feat in PLANS['FREE']['features']:
-            st.write(f"- {feat}")
-        st.button("현재 이용 중", disabled=True, use_container_width=True)
+        st.markdown(f"""
+            <div style="
+                padding: 1.5rem;
+                border-radius: 15px;
+                border: 1px solid #dfe6e9;
+                background-color: #f9f9f9;
+                height: 100%;
+            ">
+                <h3 style="color: #2d3436;">{PLANS['FREE']['name']}</h3>
+                <p style="color: #636e72;">{PLANS['FREE']['description']}</p>
+                <ul style="color: #2d3436; padding-left: 1.2rem;">
+                    {"".join([f"<li>{feat}</li>" for feat in PLANS['FREE']['features']])}
+                </ul>
+            </div>
+        """, unsafe_allow_html=True)
+        st.button("현재 이용 중", disabled=True, use_container_width=True, key="current_plan_btn")
         
     with col2:
-        st.markdown(f"### {PLANS['PREMIUM']['name']}")
-        st.write(PLANS['PREMIUM']['description'])
-        for feat in PLANS['PREMIUM']['features']:
-            st.write(f"✅ {feat}")
+        st.markdown(f"""
+            <div style="
+                padding: 1.5rem;
+                border-radius: 15px;
+                border: 2px solid #6c5ce7;
+                background-color: #ffffff;
+                box-shadow: 0 10px 20px rgba(108, 92, 231, 0.1);
+                height: 100%;
+            ">
+                <h3 style="color: #6c5ce7;">{PLANS['PREMIUM']['name']} ✨</h3>
+                <p style="color: #636e72;">{PLANS['PREMIUM']['description']}</p>
+                <ul style="color: #2d3436; list-style-type: none; padding-left: 0;">
+                    {"".join([f"<li>✅ {feat}</li>" for feat in PLANS['PREMIUM']['features']])}
+                </ul>
+                <h2 style="color: #2d3436; margin-top: 1rem;">${PLANS['PREMIUM']['price']} <small style="font-size: 0.8rem; color: #636e72;">/ 월</small></h2>
+            </div>
+        """, unsafe_allow_html=True)
         
-        st.markdown(f"## ${PLANS['PREMIUM']['price']} / 월")
-        if st.button("지금 업그레이드하기", type="primary", use_container_width=True):
+        st.markdown("<div style='margin-top: 1rem;'></div>", unsafe_allow_html=True)
+        if st.button("지금 업그레이드하기", type="primary", use_container_width=True, key="upgrade_now_btn"):
             st.info("💡 결제 시스템 연결 준비 중입니다. (Stripe/Play Store 연동 예정)")
-            # 여기서 실제 결제 페이지로 리다이렉트하거나 단계를 진행
     
-    if st.button("✖️ 닫기"):
-        st.session_state.show_paywall = False
-        st.rerun()
+    st.markdown("<br><br>", unsafe_allow_html=True)
+    col_left, col_center, col_right = st.columns([2, 1, 2])
+    with col_center:
+        if st.button("✖️ 닫기", use_container_width=True, key="close_paywall_btn"):
+            st.session_state.show_paywall = False
+            st.rerun()
