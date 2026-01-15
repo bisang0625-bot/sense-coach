@@ -78,18 +78,18 @@ def analyze_with_gemini(text_input, image_input, country, api_key, model_name="g
         # Gemini API 설정
         genai.configure(api_key=api_key)
         
-        # 사용할 모델 결정
+        # 사용할 모델 결정 및 시도 (안정적인 버전 우선)
         if image_input:
             try_models = [
-                "models/gemini-1.5-flash-latest",
-                "models/gemini-1.5-pro-latest",
-                "models/gemini-pro-vision",
+                "gemini-1.5-flash",
+                "gemini-1.5-pro",
+                "gemini-pro-vision",  # Deprecated but kept as last resort
             ]
         else:
             try_models = [
-                "models/gemini-1.5-flash-latest",
-                "models/gemini-1.5-pro-latest",
-                "models/gemini-pro",
+                "gemini-1.5-flash",
+                "gemini-1.5-pro",
+                "gemini-pro",
             ]
         
         model = None
