@@ -82,6 +82,11 @@ def render_membership_sidebar():
     else:
         st.sidebar.success("✅ 프리미엄 혜택을 이용 중입니다.")
         st.sidebar.write(f"📊 이번 달 분석 횟수: {info['usage']}회")
+    
+    # 디버깅/테스트용 ID 표시 (작게)
+    with st.sidebar.expander("🆔 나의 고유 ID", expanded=False):
+        st.code(get_or_create_user_id(), language=None)
+        st.caption("테스트 시 이 ID를 복사하여 사용하세요.")
 
 def render_paywall():
     """페이월(결제 안내) 팝업/화면 - 모바일 최적화 버전"""
