@@ -79,22 +79,21 @@ def analyze_with_gemini(text_input, image_input, country, api_key, model_name="g
         genai.configure(api_key=api_key)
         
         # 사용할 모델 후보 리스트 (Flash 계열 우선 시도하여 비용/속도 최적화)
+        # 2026년 기준 사용 가능한 모델 우선순위 조정
+        model_candidates = [
+            "gemini-2.0-flash",       # STABLE 2.0
+            "gemini-2.0-flash-exp",   # EXPERIMENTAL 2.0
+            "gemini-1.5-flash",       # STABLE 1.5
+            "gemini-1.5-flash-8b",    # LITE 1.5
+            "gemini-1.5-pro",         # PRO 1.5
+            "gemini-pro",             # LEGACY
+        ]
+        
         if image_input:
-            candidate_models = [
-                "gemini-2.0-flash-exp",
-                "gemini-1.5-flash",
-                "gemini-1.5-flash-8b", 
-                "gemini-1.5-pro",
-                "gemini-pro-vision"
-            ]
+            # 비전 모델이 필요한 경우
+            candidate_models = model_candidates + ["gemini-pro-vision"]
         else:
-            candidate_models = [
-                "gemini-2.0-flash-exp",
-                "gemini-1.5-flash",
-                "gemini-1.5-flash-8b",
-                "gemini-1.5-pro",
-                "gemini-pro"
-            ]
+            candidate_models = model_candidates
         
         # 프롬프트 생성
         has_image = image_input is not None
