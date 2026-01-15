@@ -27,12 +27,16 @@ from subscription_manager import (
 # 환경 변수 로드
 load_dotenv()
 
+# 세션 상태 초기화 (페이지 설정 전)
+if 'show_paywall' not in st.session_state:
+    st.session_state.show_paywall = False
+
 # 페이지 설정
 st.set_page_config(
     page_title="눈치코치 알림장: Sense Coach",
     page_icon="🎒",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed" if st.session_state.show_paywall else "expanded"
 )
 
 # 스타일 적용

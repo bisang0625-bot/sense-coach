@@ -73,12 +73,23 @@ def render_paywall():
     # 모바일 대응을 위한 공통 CSS 주입
     st.markdown("""
         <style>
-            /* 메인 영역 패딩 최소화 (모바일 사이드바 오픈 대비) */
+            /* 프리미엄 화면일 때 사이드바 강제 숨김 (모바일 대응) */
+            [data-testid="stSidebar"] {
+                display: none !important;
+            }
+            [data-testid="stSidebarCollapsedControl"] {
+                display: none !important;
+            }
+            
+            /* 메인 영역 패딩 최소화 */
+            .main .block-container {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+                padding-top: 2rem !important;
+                max-width: 100% !important;
+            }
+            
             @media (max-width: 768px) {
-                .main .block-container {
-                    padding-left: 1rem !important;
-                    padding-right: 1rem !important;
-                }
                 .paywall-card {
                     margin-bottom: 1rem !important;
                 }
