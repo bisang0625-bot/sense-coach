@@ -232,11 +232,25 @@ def save_event(event_data):
     conn.close()
     return event_id
 
+def safe_json_loads(data):
+    """문자열이면 JSON 파싱, 이미 객체면 그대로 반환"""
+    if data is None:
+        return []
+    if isinstance(data, (list, dict)):
+        return data
+    try:
+        if isinstance(data, str):
+            return json.loads(data)
+    except:
+        pass
+    return []
+
 def get_events(future_only=False):
     """이벤트 조회"""
     if use_supabase:
         try:
-            query = supabase.table("events").select("*, checklist_items(id, item_name, is_checked)")
+            # checklist_items 컬럼과 테이블명이 중복되므로 별칭(checklist_rel) 사용
+            query = supabase.table("events").select("*, checklist_rel:checklist_items(id, item_name, is_checked)")
             if future_only:
                 query = query.gte("event_date", date.today().isoformat())
             
@@ -253,12 +267,12 @@ def get_events(future_only=False):
                     'translation': row['translation'],
                     'cultural_context': row['cultural_context'],
                     'tips': row['tips'],
-                    'checklist_items': json.loads(row['checklist_items']) if row['checklist_items'] else [],
+                    'checklist_items': safe_json_loads(row['checklist_items']),
                     'created_at': row['created_at'],
                     'memo': row.get('memo', ''),
                     'checklist_with_status': [
                         {'id': item['id'], 'name': item['item_name'], 'checked': bool(item['is_checked'])}
-                        for item in row.get('checklist_items', [])
+                        for item in row.get('checklist_rel', [])
                     ]
                 }
                 events.append(event)
