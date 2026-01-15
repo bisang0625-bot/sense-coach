@@ -1108,23 +1108,6 @@ def main():
             
             st.markdown("---")
             
-            # 복사하기 및 다운로드 버튼
-            st.markdown("### 📋 결과 관리")
-            col1, col2 = st.columns([1, 1])
-            with col1:
-                if st.button("📋 결과 복사하기", use_container_width=True):
-                    st.code(result, language=None)
-                    st.success("결과가 코드 블록으로 표시되었습니다. 복사해서 사용하세요!")
-            
-            with col2:
-                # 결과 다운로드 버튼
-                st.download_button(
-                    label="💾 결과 다운로드",
-                    data=result,
-                    file_name=f"school_alert_summary_{country}.txt",
-                    mime="text/plain",
-                    use_container_width=True
-                )
     
     with tab2:
         try:
