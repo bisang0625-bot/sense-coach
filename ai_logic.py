@@ -77,7 +77,78 @@ def get_prompt(country, text_input=None, has_image=False):
  
     return prompt
 
-# ... (analyze_with_gemini function remains same) ...
+def analyze_with_gemini(text_input, image_input, country, api_key, model_name="gemini-pro"):
+    """Google Gemini API를 사용하여 학교 알림장 분석"""
+    try:
+        # Gemini API 설정
+        genai.configure(api_key=api_key)
+        
+        # 사용할 모델 후보 리스트 (Flash 계열 우선 시도하여 비용/속도 최적화)
+        # 2026년 기준 사용 가능한 모델 우선순위 조정
+        model_candidates = [
+            "gemini-2.0-flash",       # STABLE 2.0
+            "gemini-2.0-flash-exp",   # EXPERIMENTAL 2.0
+            "gemini-1.5-flash",       # STABLE 1.5
+            "gemini-1.5-flash-8b",    # LITE 1.5
+            "gemini-1.5-pro",         # PRO 1.5
+            "gemini-pro",             # LEGACY
+        ]
+        
+        if image_input:
+            # 비전 모델이 필요한 경우
+            candidate_models = model_candidates + ["gemini-pro-vision"]
+        else:
+            candidate_models = model_candidates
+        
+        # 프롬프트 생성
+        has_image = image_input is not None
+        prompt = get_prompt(country, text_input, has_image)
+        
+        last_error = ""
+        for model_name in candidate_models:
+            try:
+                model = genai.GenerativeModel(model_name)
+                
+                # 실행
+                if image_input:
+                    img = Image.open(image_input)
+                    response = model.generate_content([prompt, img])
+                else:
+                    response = model.generate_content(prompt)
+                
+                # 응답 처리
+                if hasattr(response, 'text') and response.text:
+                    return response.text
+                
+                # 텍스트 응답이 없는 경우 다음 모델 시도
+                last_error = "응답 텍스트가 비어 있습니다."
+                continue
+                
+            except Exception as e:
+                last_error = str(e)
+                # 404 등 모델 관련 에러인 경우 다음 모델 시도
+                if "404" in last_error or "not found" in last_error.lower() or "not supported" in last_error.lower():
+                    continue
+                else:
+                    # 기타 치명적인 에러는 즉시 중단
+                    break
+        
+        return f"❌ 모든 모델에서 분석에 실패했습니다. (마지막 오류: {last_error})"
+        
+    except Exception as e:
+        return f"❌ 알 수 없는 오류 발생: {str(e)}"
+
+def is_valid_checklist_item(item):
+    """준비물 항목 유효성 검증"""
+    if not item or not isinstance(item, str): return False
+    cleaned = item.strip()
+    if not cleaned or len(cleaned) <= 2: return False
+    if re.match(r'^[-—─–\s]+$', cleaned): return False
+    invalid_patterns = [r'^없음', r'^없습니다', r'준비물\s*없', r'^[-•]\s*$', r'^\.+$']
+    for p in invalid_patterns:
+        if re.search(p, cleaned, re.IGNORECASE): return False
+    meaningful = re.findall(r'[가-힣a-zA-Z0-9]+', cleaned)
+    return len(''.join(meaningful)) >= 3
 
 def parse_analysis_result(result, country):
     """분석 결과 파싱 (다중 이벤트 지원)"""
