@@ -1,7 +1,11 @@
 import streamlit as st
 import uuid
-from database_utils import get_user_tier, get_usage, increment_usage
+from database_utils import get_user_tier, get_usage, increment_usage, update_user_tier
 from payment_config import PLANS
+
+# 결제 성공 시 리다이렉트될 URL (Streamlit Cloud URL로 변경 필요)
+APP_URL = "https://sense-coach.streamlit.app"
+STRIPE_PAYMENT_LINK = "https://buy.stripe.com/test_6oEcN69Iu7y0ayI7ss" # 임시 테스트 링크
 
 def get_or_create_user_id():
     """사용자 고유 ID 생성 또는 가져오기 (세션 및 로컬 저장소 활용)"""
@@ -14,6 +18,17 @@ def get_or_create_user_id():
             # 2. 새로운 랜덤 ID 생성 (실제 앱에서는 기기 ID 등을 활용하거나 로그인을 유도)
             st.session_state.user_id = str(uuid.uuid4())
     
+    # --- 결제 성공 처리 ---
+    params = st.query_params
+    if params.get("payment_success") == "true" and "uid" in params:
+        target_uid = params["uid"]
+        # 가장 쉬운 구현을 위해 URL 파라미터 기반으로 업데이트 진행
+        if update_user_tier(target_uid, "PREMIUM"):
+            st.success("🎉 결제가 성공적으로 완료되었습니다! 프리미엄 혜택이 적용되었습니다.")
+            # 파라미터 제거 및 새로고침
+            st.query_params.clear()
+            st.rerun()
+
     return st.session_state.user_id
 
 def check_can_analyze():
@@ -70,6 +85,8 @@ def render_membership_sidebar():
 
 def render_paywall():
     """페이월(결제 안내) 팝업/화면 - 모바일 최적화 버전"""
+    user_id = get_or_create_user_id()
+    
     # 모바일 대응을 위한 공통 CSS 주입
     st.markdown("""
         <style>
@@ -151,8 +168,15 @@ def render_paywall():
         """, unsafe_allow_html=True)
         
         st.markdown("<div style='margin-top: 0.8rem;'></div>", unsafe_allow_html=True)
-        if st.button("지금 업그레이드하기", type="primary", use_container_width=True, key="upgrade_now_btn_mobile"):
-            st.info("💡 결제 시스템 연결 준비 중입니다. (Stripe/Play Store 연동 예정)")
+        
+        # Stripe 결제 링크로 이동 (user_id를 uid 파라미터로 전달)
+        st.link_button(
+            "지금 업그레이드하기", 
+            f"{STRIPE_PAYMENT_LINK}?client_reference_id={user_id}",
+            type="primary", 
+            use_container_width=True
+        )
+        st.caption("🔒 안전한 Stripe 결제 페이지로 이동합니다.")
     
     st.markdown("<br>", unsafe_allow_html=True)
     # 닫기 버튼을 좀 더 명확하게 배치

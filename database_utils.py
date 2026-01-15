@@ -468,3 +468,18 @@ def increment_usage(user_id):
     conn.commit()
     conn.close()
     return True
+def update_user_tier(user_id, new_tier):
+    """사용자 구독 등급 업데이트"""
+    if use_supabase:
+        try:
+            supabase.table("users").update({"subscription_tier": new_tier}).eq("user_id", user_id).execute()
+            return True
+        except Exception as e:
+            return False
+
+    conn = sqlite3.connect('school_events.db')
+    c = conn.cursor()
+    c.execute('UPDATE users SET subscription_tier = ? WHERE user_id = ?', (new_tier, user_id))
+    conn.commit()
+    conn.close()
+    return True
