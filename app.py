@@ -19,6 +19,10 @@ from database_utils import (
 )
 from ai_logic import analyze_with_gemini, parse_analysis_result, is_valid_checklist_item
 from ui_styles import STYLE_CSS, COLORS
+from subscription_manager import (
+    get_or_create_user_id, check_can_analyze, process_analysis_usage, 
+    render_membership_sidebar, render_paywall
+)
 
 # 환경 변수 로드
 load_dotenv()
@@ -667,6 +671,9 @@ def main():
             else:
                 st.warning("⚠️ 아이 이름을 입력해주세요.")
         
+        # 멤버십 정보 표시
+        render_membership_sidebar()
+        
         # 데이터 관리 섹션 (스토어 규정 준수)
         st.markdown("<div style='margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #ffcccc;'></div>", unsafe_allow_html=True)
         st.markdown("### ⚠️ 데이터 관리")
@@ -676,6 +683,17 @@ def main():
                 reset_all_data()
                 st.success("✅ 모든 데이터가 초기화되었습니다.")
                 st.rerun()
+        
+        # 하단 법적 고지 및 지원 (사이드바 최하단)
+        st.markdown("<div style='margin-top: 3rem; padding-top: 1rem; border-top: 1px solid #e0e0e0; font-size: 0.8rem; color: #888;'></div>", unsafe_allow_html=True)
+        st.markdown("""
+            <div style="font-size: 0.8rem; color: #888; text-align: center;">
+                <p>© 2026 눈치코치 알림장 (Sense Coach)</p>
+                <a href="https://github.com/bisang0625-bot/sense-coach/blob/main/privacy-policy.md" target="_blank" style="color: #888; text-decoration: none;">개인정보 처리방침</a> | 
+                <a href="#" style="color: #888; text-decoration: none;">이용약관</a><br>
+                문의: <a href="mailto:support@sensecoach.app" style="color: #888; text-decoration: none;">support@sensecoach.app</a>
+            </div>
+        """, unsafe_allow_html=True)
     
     # 메인 영역 - 커스텀 제목 디자인
     st.markdown("""
@@ -718,11 +736,26 @@ def main():
         
         st.markdown("---")
         
+        if st.session_state.get('show_paywall', False):
+            render_paywall()
+            st.stop()
+            
         # 분석 버튼
         analyze_button = st.button("🔍 분석하기", use_container_width=True)
         
         # 분석 실행
         if analyze_button:
+            # 사용량 제한 확인
+            can_analyze, current, max_val, tier = check_can_analyze()
+            if not can_analyze:
+                st.error(f"⚠️ 이번 달 분석 횟수({max_val}회)를 모두 사용하셨습니다.")
+                st.info("💎 무제한 분석을 위해 프리미엄으로 업그레이드하세요!")
+                if st.button("🚀 프리미엄 혜택 보기", key="paywall_btn_main"):
+                    st.session_state.show_paywall = True
+                    st.rerun()
+                st.stop()
+
+            # 입력 검증
             # 입력 검증
             if not text_input and not image_input:
                 st.error("⚠️ 텍스트 또는 이미지를 입력해주세요.")
@@ -754,6 +787,9 @@ def main():
                     if result.startswith("❌"):
                         st.error(result)
                         st.stop()
+                    
+                    # 분석 성공 시 사용량 기록
+                    process_analysis_usage()
                     
                     # 분석 결과를 session_state에 저장 (rerun 시에도 유지)
                     st.session_state['last_analysis_result'] = result

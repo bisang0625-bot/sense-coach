@@ -72,6 +72,26 @@ def init_database():
         )
     ''')
     
+    # 사용자 정보 테이블 생성
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            user_id TEXT PRIMARY KEY,
+            subscription_tier TEXT DEFAULT 'FREE',
+            expiry_date DATE,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # 사용량 추적 테이블 생성
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS usage_tracking (
+            user_id TEXT,
+            month_year TEXT,
+            analysis_count INTEGER DEFAULT 0,
+            PRIMARY KEY (user_id, month_year)
+        )
+    ''')
+    
     conn.commit()
     conn.close()
 
@@ -377,3 +397,74 @@ def reset_all_data():
     c.execute('DELETE FROM children')
     conn.commit()
     conn.close()
+
+def get_user_tier(user_id):
+    """사용자 구독 등급 조회"""
+    if use_supabase:
+        try:
+            response = supabase.table("users").select("subscription_tier").eq("user_id", user_id).execute()
+            if response.data:
+                return response.data[0]["subscription_tier"]
+            # 사용자가 없으면 기본 FREE 멤버십으로 생성
+            supabase.table("users").insert({"user_id": user_id, "subscription_tier": "FREE"}).execute()
+            return "FREE"
+        except Exception as e:
+            return "FREE"
+
+    conn = sqlite3.connect('school_events.db')
+    c = conn.cursor()
+    c.execute('SELECT subscription_tier FROM users WHERE user_id = ?', (user_id,))
+    row = c.fetchone()
+    if row:
+        tier = row[0]
+    else:
+        # 사용자가 없으면 생성
+        c.execute('INSERT INTO users (user_id, subscription_tier) VALUES (?, ?)', (user_id, 'FREE'))
+        conn.commit()
+        tier = 'FREE'
+    conn.close()
+    return tier
+
+def get_usage(user_id):
+    """현재 달의 사용량 조회"""
+    month_year = datetime.now().strftime('%Y-%m')
+    if use_supabase:
+        try:
+            response = supabase.table("usage_tracking").select("analysis_count").eq("user_id", user_id).eq("month_year", month_year).execute()
+            if response.data:
+                return response.data[0]["analysis_count"]
+            return 0
+        except Exception as e:
+            return 0
+
+    conn = sqlite3.connect('school_events.db')
+    c = conn.cursor()
+    c.execute('SELECT analysis_count FROM usage_tracking WHERE user_id = ? AND month_year = ?', (user_id, month_year))
+    row = c.fetchone()
+    count = row[0] if row else 0
+    conn.close()
+    return count
+
+def increment_usage(user_id):
+    """사용량 1 증가"""
+    month_year = datetime.now().strftime('%Y-%m')
+    if use_supabase:
+        try:
+            # Upsert 사용 (기존 데이터 있으면 업데이트, 없으면 삽입)
+            current = get_usage(user_id)
+            supabase.table("usage_tracking").upsert({
+                "user_id": user_id, 
+                "month_year": month_year, 
+                "analysis_count": current + 1
+            }).execute()
+            return True
+        except Exception as e:
+            return False
+
+    conn = sqlite3.connect('school_events.db')
+    c = conn.cursor()
+    c.execute('INSERT OR IGNORE INTO usage_tracking (user_id, month_year, analysis_count) VALUES (?, ?, ?)', (user_id, month_year, 0))
+    c.execute('UPDATE usage_tracking SET analysis_count = analysis_count + 1 WHERE user_id = ? AND month_year = ?', (user_id, month_year))
+    conn.commit()
+    conn.close()
+    return True
