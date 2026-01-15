@@ -78,49 +78,49 @@ def analyze_with_gemini(text_input, image_input, country, api_key, model_name="g
         # Gemini API 설정
         genai.configure(api_key=api_key)
         
-        # 사용할 모델 결정 및 시도 (안정적인 버전 우선)
+        # 사용할 모델 후보 리스트 (최신 모델부터 안정적 버전 순서로)
         if image_input:
-            try_models = [
-                "gemini-1.5-flash",
-                "gemini-1.5-pro",
-                "gemini-pro-vision",  # Deprecated but kept as last resort
-            ]
+            candidate_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro-vision"]
         else:
-            try_models = [
-                "gemini-1.5-flash",
-                "gemini-1.5-pro",
-                "gemini-pro",
-            ]
-        
-        model = None
-        for test_model in try_models:
-            try:
-                model = genai.GenerativeModel(test_model)
-                break
-            except:
-                continue
-        
-        if model is None:
-            raise Exception("사용 가능한 모델을 찾을 수 없습니다.")
+            candidate_models = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"]
         
         # 프롬프트 생성
         has_image = image_input is not None
         prompt = get_prompt(country, text_input, has_image)
         
-        # 실행
-        if image_input:
-            img = Image.open(image_input)
-            response = model.generate_content([prompt, img])
-        else:
-            response = model.generate_content(prompt)
+        last_error = ""
+        for model_name in candidate_models:
+            try:
+                model = genai.GenerativeModel(model_name)
+                
+                # 실행
+                if image_input:
+                    img = Image.open(image_input)
+                    response = model.generate_content([prompt, img])
+                else:
+                    response = model.generate_content(prompt)
+                
+                # 응답 처리
+                if hasattr(response, 'text') and response.text:
+                    return response.text
+                
+                # 텍스트 응답이 없는 경우 다음 모델 시도
+                last_error = "응답 텍스트가 비어 있습니다."
+                continue
+                
+            except Exception as e:
+                last_error = str(e)
+                # 404 등 모델 관련 에러인 경우 다음 모델 시도
+                if "404" in last_error or "not found" in last_error.lower() or "not supported" in last_error.lower():
+                    continue
+                else:
+                    # 기타 치명적인 에러는 즉시 중단
+                    break
         
-        # 응답 처리
-        if hasattr(response, 'text') and response.text:
-            return response.text
-        return "❌ 응답을 생성할 수 없습니다."
+        return f"❌ 모든 모델에서 분석에 실패했습니다. (마지막 오류: {last_error})"
         
     except Exception as e:
-        return f"❌ 오류 발생: {str(e)}"
+        return f"❌ 알 수 없는 오류 발생: {str(e)}"
 
 def is_valid_checklist_item(item):
     """준비물 항목 유효성 검증"""
