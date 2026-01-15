@@ -68,6 +68,11 @@ def render_membership_sidebar():
     info = get_membership_info()
     st.sidebar.markdown("---")
     st.sidebar.markdown(f"### 💎 멤버십: {info['tier_name']}")
+    # 디버깅/테스트용 ID 표시 (멤버십 제목 바로 아래에 작게 배치)
+    with st.sidebar.expander("🆔 테스트용 고유 ID 확인", expanded=False):
+        uid = get_or_create_user_id()
+        st.code(uid, language=None)
+        st.caption("위 ID를 복사하여 결제 테스트 URL에 사용하세요.")
     
     if info['tier'] == 'FREE':
         usage_pct = info['usage'] / info['max_usage'] if info['max_usage'] > 0 else 1
@@ -82,11 +87,6 @@ def render_membership_sidebar():
     else:
         st.sidebar.success("✅ 프리미엄 혜택을 이용 중입니다.")
         st.sidebar.write(f"📊 이번 달 분석 횟수: {info['usage']}회")
-    
-    # 디버깅/테스트용 ID 표시 (작게)
-    with st.sidebar.expander("🆔 나의 고유 ID", expanded=False):
-        st.code(get_or_create_user_id(), language=None)
-        st.caption("테스트 시 이 ID를 복사하여 사용하세요.")
 
 def render_paywall():
     """페이월(결제 안내) 팝업/화면 - 모바일 최적화 버전"""
