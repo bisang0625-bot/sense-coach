@@ -72,12 +72,6 @@ def init_database():
         )
     ''')
     
-    # 기본 아이 정보 추가
-    c.execute('SELECT COUNT(*) FROM children')
-    if c.fetchone()[0] == 0:
-        c.execute('INSERT INTO children (name, display_order) VALUES (?, ?)', ('첫째', 1))
-        c.execute('INSERT INTO children (name, display_order) VALUES (?, ?)', ('둘째', 2))
-    
     conn.commit()
     conn.close()
 
@@ -374,8 +368,6 @@ def reset_all_data():
         # Supabase API는 대량 삭제에 제약이 있을 수 있으므로 주의 (일반적으로 빈 테이블로 초기화)
         supabase.table("events").delete().neq("id", 0).execute()
         supabase.table("children").delete().neq("id", 0).execute()
-        # 기본 아이 재작성
-        supabase.table("children").insert([{"name": '첫째', "display_order": 1}, {"name": '둘째', "display_order": 2}]).execute()
         return
 
     conn = sqlite3.connect('school_events.db')
@@ -383,7 +375,5 @@ def reset_all_data():
     c.execute('DELETE FROM events')
     c.execute('DELETE FROM checklist_items')
     c.execute('DELETE FROM children')
-    c.execute('INSERT INTO children (name, display_order) VALUES (?, ?)', ('첫째', 1))
-    c.execute('INSERT INTO children (name, display_order) VALUES (?, ?)', ('둘째', 2))
     conn.commit()
     conn.close()

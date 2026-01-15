@@ -566,80 +566,86 @@ def main():
         if children_list:
             st.markdown("**등록된 아이:**")
             for idx, child in enumerate(children_list):
-                # 아이 항목을 한 행에 배치: 이름 + 버튼
-                col_name, col_edit, col_delete = st.columns([3, 1, 1], gap="small")
+                # 수정 모드가 활성화되어 있는지 확인 (이름 기반)
+                is_editing = st.session_state.get(f'editing_child_{child}', False)
                 
-                with col_name:
-                    # 아이 이름 박스
-                    st.markdown(f"""
-                        <div style="
-                            padding: 0.7rem 1rem;
-                            background: #f8f9fa;
-                            border-radius: 8px;
-                            border: 1px solid #e0e0e0;
-                            display: flex;
-                            align-items: center;
-                            min-height: 40px;
-                        ">
-                            <strong style="font-size: 1rem;">{child}</strong>
-                        </div>
-                    """, unsafe_allow_html=True)
-                
-                with col_edit:
-                    # 수정 버튼 - 높이 제한
-                    if st.button("✏️", key=f"edit_child_{idx}", help="수정", use_container_width=True, type="secondary"):
-                        st.session_state[f'editing_child_{idx}'] = True
-                        st.rerun()
-                
-                with col_delete:
-                    # 삭제 버튼 - 높이 제한
-                    if st.button("🗑️", key=f"delete_child_{idx}", help="삭제", use_container_width=True, type="secondary"):
-                        delete_child(child)
-                        st.success(f"✅ '{child}'가 삭제되었습니다.")
-                        st.rerun()
-                
-                # 간격 조정
-                st.markdown("<div style='margin-bottom: 0.5rem;'></div>", unsafe_allow_html=True)
-                
-                # 수정 모드
-                if st.session_state.get(f'editing_child_{idx}', False):
+                if not is_editing:
+                    # 일반 표시 모드
+                    col_name, col_edit, col_delete = st.columns([3, 1, 1], gap="small")
+                    
+                    with col_name:
+                        # 아이 이름 박스
+                        st.markdown(f"""
+                            <div style="
+                                padding: 0.7rem 1rem;
+                                background: #f8f9fa;
+                                border-radius: 8px;
+                                border: 1px solid #e0e0e0;
+                                display: flex;
+                                align-items: center;
+                                min-height: 40px;
+                            ">
+                                <strong style="font-size: 1rem;">{child}</strong>
+                            </div>
+                        """, unsafe_allow_html=True)
+                    
+                    with col_edit:
+                        # 수정 버튼
+                        if st.button("✏️", key=f"edit_child_{child}", help="수정", use_container_width=True, type="secondary"):
+                            st.session_state[f'editing_child_{child}'] = True
+                            st.rerun()
+                    
+                    with col_delete:
+                        # 삭제 버튼
+                        if st.button("🗑️", key=f"delete_child_{child}", help="삭제", use_container_width=True, type="secondary"):
+                            delete_child(child)
+                            st.success(f"✅ '{child}'가 삭제되었습니다.")
+                            st.rerun()
+                else:
+                    # 수정 모드
                     st.markdown("""
                         <div style="
                             padding: 0.8rem;
                             background: #fff3cd;
                             border-radius: 8px;
-                            margin-top: 0.5rem;
                             margin-bottom: 0.5rem;
                             border-left: 3px solid #ffc107;
                         ">
                             <strong>✏️ 수정 모드</strong>
                         </div>
                     """, unsafe_allow_html=True)
+                    
                     new_name = st.text_input(
                         "새 이름 입력",
                         value=child,
-                        key=f"edit_input_{idx}",
+                        key=f"edit_input_{child}",
                         label_visibility="visible"
                     )
+                    
                     col_save_edit, col_cancel_edit = st.columns([1, 1])
                     with col_save_edit:
-                        if st.button("💾 저장", key=f"save_edit_{idx}", use_container_width=True, type="primary"):
+                        if st.button("💾 저장", key=f"save_edit_{child}", use_container_width=True, type="primary"):
                             if new_name and new_name.strip() and new_name.strip() != child:
                                 if update_child_name(child, new_name.strip()):
                                     st.success(f"✅ '{child}'이(가) '{new_name.strip()}'으로 변경되었습니다.")
-                                    st.session_state[f'editing_child_{idx}'] = False
+                                    # 이전 상태 삭제 및 새 상태로 업데이트
+                                    del st.session_state[f'editing_child_{child}']
                                     st.rerun()
                                 else:
                                     st.error("❌ 같은 이름의 아이가 이미 존재합니다.")
                             elif new_name and new_name.strip() == child:
-                                st.session_state[f'editing_child_{idx}'] = False
+                                del st.session_state[f'editing_child_{child}']
                                 st.rerun()
                             else:
                                 st.warning("⚠️ 아이 이름을 입력해주세요.")
+                    
                     with col_cancel_edit:
-                        if st.button("❌ 취소", key=f"cancel_edit_{idx}", use_container_width=True):
-                            st.session_state[f'editing_child_{idx}'] = False
+                        if st.button("❌ 취소", key=f"cancel_edit_{child}", use_container_width=True):
+                            del st.session_state[f'editing_child_{child}']
                             st.rerun()
+                
+                # 간격 조정
+                st.markdown("<div style='margin-bottom: 0.5rem;'></div>", unsafe_allow_html=True)
         else:
             st.info("💡 등록된 아이가 없습니다. 아래에서 아이를 추가해주세요.")
         
