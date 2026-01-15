@@ -472,7 +472,11 @@ def update_user_tier(user_id, new_tier):
     """사용자 구독 등급 업데이트"""
     if use_supabase:
         try:
-            supabase.table("users").update({"subscription_tier": new_tier}).eq("user_id", user_id).execute()
+            # Upsert 사용: 사용자가 없으면 생성하고, 있으면 업데이트
+            supabase.table("users").upsert({
+                "user_id": user_id, 
+                "subscription_tier": new_tier
+            }).execute()
             return True
         except Exception as e:
             return False
