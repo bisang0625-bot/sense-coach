@@ -976,40 +976,57 @@ def main():
                 # 정보 표시 후 세션 상태에서 제거 (다음 분석 시 새로운 정보로 교체)
                 # del st.session_state[filter_key]  # 주석 처리: 사용자가 확인할 수 있도록 유지
             
-            # 저장 섹션
-            if parsed_data.get('event_name') and parsed_data.get('event_date'):
-                st.markdown("### 📌 일정 저장")
-                
-                # 데이터베이스에서 아이 목록 가져오기
-                children_list = get_children()
-                child_options = ['없음'] + children_list + ['둘 다'] if len(children_list) > 1 else ['없음'] + children_list
-                
-                col_tag, col_save_btn = st.columns([2, 1])
-                with col_tag:
-                    # 아이 태그 선택 (데이터베이스에서 가져온 목록 사용)
-                    child_tag = st.selectbox(
-                        "👶 아이 선택",
-                        options=child_options,
-                        key="child_tag_select",
-                        help="어떤 아이의 일정인지 선택해주세요"
-                    )
-                    # '둘 다'가 아닌 경우 그대로 사용
-                    child_tag_clean = child_tag
-                    parsed_data['child_tag'] = child_tag_clean
-                
-                with col_save_btn:
-                    st.markdown("<br>", unsafe_allow_html=True)  # 버튼 정렬을 위한 공백
-                    if st.button("📌 내 일정에 저장하기", use_container_width=True, type="primary"):
+            # 저장 섹션 (항상 표시, 자동 추출 실패 시 수동 입력 가능)
+            st.markdown("### 📌 일정 저장")
+            
+            # 1. 행사명 및 일시 확인/수정
+            col_check_1, col_check_2 = st.columns(2)
+            with col_check_1:
+                # 자동 추출된 값 또는 빈 값
+                default_name = parsed_data.get('event_name', '')
+                manual_event_name = st.text_input("행사명 (필수)", value=default_name, key="manual_event_name", placeholder="예: 학부모 상담일")
+            
+            with col_check_2:
+                default_date = parsed_data.get('event_date', '')
+                manual_event_date = st.text_input("일시 (필수)", value=default_date, key="manual_event_date", placeholder="예: 2026-03-15 또는 2026-03-15 14:00")
+            
+            # 데이터베이스에서 아이 목록 가져오기
+            children_list = get_children()
+            child_options = ['없음'] + children_list + ['둘 다'] if len(children_list) > 1 else ['없음'] + children_list
+            
+            col_tag, col_save_btn = st.columns([2, 1])
+            with col_tag:
+                # 아이 태그 선택 (데이터베이스에서 가져온 목록 사용)
+                child_tag = st.selectbox(
+                    "👶 아이 선택",
+                    options=child_options,
+                    key="child_tag_select",
+                    help="어떤 아이의 일정인지 선택해주세요"
+                )
+                child_tag_clean = child_tag
+            
+            with col_save_btn:
+                st.markdown("<br>", unsafe_allow_html=True)  # 버튼 정렬을 위한 공백
+                # 필수 항목이 있을 때만 버튼 활성화 로직은 내부에서 처리하거나 알림으로 대체
+                if st.button("📌 내 일정에 저장하기", use_container_width=True, type="primary"):
+                    if manual_event_name and manual_event_date:
                         try:
+                            # 수동 입력값으로 업데이트
+                            parsed_data['event_name'] = manual_event_name
+                            parsed_data['event_date'] = manual_event_date
+                            parsed_data['child_tag'] = child_tag_clean
+                            
                             event_id = save_event(parsed_data)
-                            st.success(f"✅ '{parsed_data['event_name']}' 일정이 저장되었습니다!")
+                            st.success(f"✅ '{manual_event_name}' 일정이 저장되었습니다!")
                             st.balloons()
                             st.info("💡 '나의 일정 (Dashboard)' 탭에서 저장된 일정을 확인할 수 있습니다.")
                         except Exception as e:
                             st.error(f"❌ 저장 중 오류가 발생했습니다: {str(e)}")
-            else:
-                st.warning("⚠️ 행사명과 날짜가 추출되지 않아 저장할 수 없습니다.")
-                st.info("💡 분석 결과에서 행사명(📌)과 일시(📅) 정보를 확인할 수 없는 경우 저장이 불가능합니다.")
+                    else:
+                        st.warning("⚠️ 행사명과 일시를 입력해주세요.")
+            
+            if not parsed_data.get('event_name') or not parsed_data.get('event_date'):
+                st.info("💡 AI가 행사명이나 일시를 자동으로 찾지 못했습니다. 직접 입력하여 저장할 수 있습니다.")
             
             st.markdown("---")
             
