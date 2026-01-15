@@ -81,6 +81,7 @@ def analyze_with_gemini(text_input, image_input, country, api_key, model_name="g
         # 사용할 모델 후보 리스트 (Flash 계열 우선 시도하여 비용/속도 최적화)
         if image_input:
             candidate_models = [
+                "gemini-2.0-flash-exp",
                 "gemini-1.5-flash",
                 "gemini-1.5-flash-8b", 
                 "gemini-1.5-pro",
@@ -88,6 +89,7 @@ def analyze_with_gemini(text_input, image_input, country, api_key, model_name="g
             ]
         else:
             candidate_models = [
+                "gemini-2.0-flash-exp",
                 "gemini-1.5-flash",
                 "gemini-1.5-flash-8b",
                 "gemini-1.5-pro",
