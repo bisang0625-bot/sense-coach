@@ -1058,11 +1058,18 @@ def main():
                     if st.button("💾 저장하기", key=f"save_btn_{i}", use_container_width=True, type="primary"):
                         if manual_event_name and manual_event_date:
                             try:
+                                # 준비물 리스트 처리
+                                # text_area의 key를 통해 현재 값을 가져옴
+                                current_checklist_str = st.session_state.get(f"checklist_{i}", "")
+                                # 줄바꿈으로 분리하고 빈 줄 제거
+                                updated_checklist = [item.strip() for item in current_checklist_str.split('\n') if item.strip()]
+                                
                                 # 데이터 업데이트
                                 event_data['event_name'] = manual_event_name
                                 event_data['event_date'] = manual_event_date
                                 event_data['event_time'] = manual_event_time
                                 event_data['child_tag'] = child_tag
+                                event_data['checklist_items'] = updated_checklist
                                 
                                 save_event(event_data)
                                 st.toast(f"✅ '{manual_event_name}' 저장 완료!", icon="🎉")
@@ -1073,11 +1080,20 @@ def main():
                             st.warning("⚠️ 행사명과 날짜를 입력해주세요.")
                 
                 # 추가 정보 (Checklist, Translation 등) 표시 - Expander로 숨김
-                with st.expander("📝 상세 정보 및 준비물 보기", expanded=False):
-                    if event_data.get('checklist_items'):
-                        st.markdown("**✅ 준비물:**")
-                        for item in event_data['checklist_items']:
-                            st.markdown(f"- {item}")
+                with st.expander("📝 상세 정보 및 준비물 보기/수정", expanded=False):
+                    # 준비물 수정 기능 추가
+                    current_items = event_data.get('checklist_items', [])
+                    items_str = "\n".join(current_items) if current_items else ""
+                    
+                    new_items_str = st.text_area(
+                        "✅ 준비물 (한 줄에 하나씩 입력)",
+                        value=items_str,
+                        key=f"checklist_{i}",
+                        help="준비물을 수정하거나 추가할 수 있습니다. 각 항목을 줄바꿈으로 구분하세요."
+                    )
+                    
+                    # 실시간 업데이트를 위해 session state에 반영하지는 않고, 저장 버튼 클릭 시 처리하도록 함
+                    # 다만 UI 상에서 바로 반영되어 보이게 하려면 저장 로직에서 이 값을 참조해야 함
                     
                     if event_data.get('translation'):
                         st.markdown("**🌐 번역:**")
