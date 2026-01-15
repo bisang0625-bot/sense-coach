@@ -1,4 +1,4 @@
-# 📚 눈치코치 - Sense Coach
+# 📚 눈치코치 알림장 - Sense Coach
 
 > 현지 학교 알림장의 행간을 읽어주는 AI 문화 비서
 
@@ -131,7 +131,7 @@ streamlit run app.py
 
 ## 📱 모바일 앱 버전
 
-눈치코치는 웹앱으로 시작하여, iOS App Store와 Google Play Store로 확장 예정입니다.
+눈치코치 알림장은 웹앱으로 시작하여, iOS App Store와 Google Play Store로 확장 예정입니다.
 
 ### 앱스토어 등록 가이드
 자세한 내용은 다음 문서를 참고하세요:

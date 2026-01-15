@@ -31,7 +31,7 @@ git add .
 git commit -m "Initial commit for Sense Coach app"
 
 # GitHub 원격 저장소 생성 후 연결
-git remote add origin https://github.com/yourusername/sense-coach.git
+git remote add origin https://github.com/bisang0625/sense-coach.git
 git branch -M main
 git push -u origin main
 ```
@@ -44,7 +44,7 @@ git push -u origin main
 
 2. **새 앱 생성**
    - "New app" 클릭
-   - Repository: `yourusername/sense-coach` 선택
+   - Repository: `bisang0625/sense-coach` 선택
    - Branch: `main`
    - Main file path: `app.py`
 
