@@ -980,15 +980,40 @@ def main():
             st.markdown("### 📌 일정 저장")
             
             # 1. 행사명 및 일시 확인/수정
-            col_check_1, col_check_2 = st.columns(2)
+            col_check_1, col_check_2, col_check_3 = st.columns([2, 1, 1])
             with col_check_1:
                 # 자동 추출된 값 또는 빈 값
                 default_name = parsed_data.get('event_name', '')
                 manual_event_name = st.text_input("행사명 (필수)", value=default_name, key="manual_event_name", placeholder="예: 학부모 상담일")
             
             with col_check_2:
-                default_date = parsed_data.get('event_date', '')
-                manual_event_date = st.text_input("일시 (필수)", value=default_date, key="manual_event_date", placeholder="예: 2026-03-15 또는 2026-03-15 14:00")
+                # 날짜 문자열을 date 객체로 변환 시도
+                default_date_value = date.today()
+                
+                date_str = parsed_data.get('event_date', '')
+                if date_str:
+                    try:
+                        # YYYY-MM-DD 형식 시도
+                        default_date_value = datetime.strptime(date_str, "%Y-%m-%d").date()
+                    except ValueError:
+                        pass
+                
+                manual_event_date_obj = st.date_input("날짜 (필수)", value=default_date_value, key="manual_event_date_picker")
+                # 문자열로 변환하여 저장
+                manual_event_date = manual_event_date_obj.strftime("%Y-%m-%d") if manual_event_date_obj else ""
+            
+            with col_check_3:
+                # 시간 (선택)
+                default_time = parsed_data.get('event_time', '')
+                # 시간 정보가 날짜 필드에 섞여 있을 경우 추출 시도 (YYYY-MM-DD HH:MM)
+                if not default_time and ' ' in date_str:
+                    try:
+                        _, time_part = date_str.split(' ', 1)
+                        default_time = time_part
+                    except:
+                        pass
+                        
+                manual_event_time = st.text_input("시간 (선택)", value=default_time, key="manual_event_time", placeholder="예: 14:00")
             
             # 데이터베이스에서 아이 목록 가져오기
             children_list = get_children()
@@ -1014,6 +1039,7 @@ def main():
                             # 수동 입력값으로 업데이트
                             parsed_data['event_name'] = manual_event_name
                             parsed_data['event_date'] = manual_event_date
+                            parsed_data['event_time'] = manual_event_time
                             parsed_data['child_tag'] = child_tag_clean
                             
                             event_id = save_event(parsed_data)
@@ -1023,7 +1049,7 @@ def main():
                         except Exception as e:
                             st.error(f"❌ 저장 중 오류가 발생했습니다: {str(e)}")
                     else:
-                        st.warning("⚠️ 행사명과 일시를 입력해주세요.")
+                        st.warning("⚠️ 행사명과 날짜를 입력해주세요.")
             
             if not parsed_data.get('event_name') or not parsed_data.get('event_date'):
                 st.info("💡 AI가 행사명이나 일시를 자동으로 찾지 못했습니다. 직접 입력하여 저장할 수 있습니다.")
