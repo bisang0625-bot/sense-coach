@@ -957,102 +957,138 @@ def main():
             # 저장 버튼 및 복사/다운로드 버튼
             st.markdown("---")
             
-            # 저장된 파싱 데이터 사용 (session_state에서)
-            parsed_data = st.session_state.get('last_analysis_parsed', {})
+            # 저장 섹션 (다중 일정 지원)
+            st.markdown("### 📌 일정 저장 및 관리")
             
-            # 필터링된 준비물 항목이 있으면 사용자에게 알림
-            filter_key = f'filtered_checklist_{st.session_state.get("selected_country", "네덜란드")}'
-            if filter_key in st.session_state:
-                filter_info = st.session_state[filter_key]
-                if filter_info.get('filtered_count', 0) > 0:
-                    with st.expander(f"ℹ️ 준비물 필터링 정보 ({filter_info['filtered_count']}개 항목 제외됨)", expanded=False):
-                        st.warning(f"⚠️ {filter_info['filtered_count']}개의 불필요한 항목이 자동으로 제외되었습니다.")
-                        st.info(f"✅ {filter_info['valid_count']}개의 유효한 준비물이 저장되었습니다.")
-                        if filter_info.get('filtered_items'):
-                            st.markdown("**제외된 항목:**")
-                            for item in filter_info['filtered_items']:
-                                st.markdown(f"- `{item}`")
-                        st.markdown("💡 다음 항목은 자동으로 제외됩니다: '-', '없음', 2자 이하, 대시만 있는 항목 등")
-                # 정보 표시 후 세션 상태에서 제거 (다음 분석 시 새로운 정보로 교체)
-                # del st.session_state[filter_key]  # 주석 처리: 사용자가 확인할 수 있도록 유지
+            # 세션 상태에서 파싱된 데이터 가져오기 및 리스트 변환 확인
+            parsed_data_raw = st.session_state.get('last_analysis_parsed', [])
+            if isinstance(parsed_data_raw, dict):
+                parsed_events = [parsed_data_raw]
+            else:
+                parsed_events = parsed_data_raw
             
-            # 저장 섹션 (항상 표시, 자동 추출 실패 시 수동 입력 가능)
-            st.markdown("### 📌 일정 저장")
+            # 1. 일정 추가 버튼
+            if st.button("➕ 일정 직접 추가하기", use_container_width=True):
+                parsed_events.append({
+                    'event_name': '', 
+                    'event_date': '', 
+                    'event_time': '',
+                    'child_tag': parsed_events[0].get('child_tag') if parsed_events else None,
+                    'country': country
+                })
+                st.session_state['last_analysis_parsed'] = parsed_events
+                st.rerun()
             
-            # 1. 행사명 및 일시 확인/수정
-            col_check_1, col_check_2, col_check_3 = st.columns([2, 1, 1])
-            with col_check_1:
-                # 자동 추출된 값 또는 빈 값
-                default_name = parsed_data.get('event_name', '')
-                manual_event_name = st.text_input("행사명 (필수)", value=default_name, key="manual_event_name", placeholder="예: 학부모 상담일")
-            
-            with col_check_2:
-                # 날짜 문자열을 date 객체로 변환 시도
-                default_date_value = date.today()
+            st.markdown("---")
+
+            # 2. 각 일정별 카드 렌더링
+            for i, event_data in enumerate(parsed_events):
+                # 카드로 시각적 구분
+                st.markdown(f"""
+                <div style="
+                    padding: 1rem;
+                    border: 1px solid #e0e0e0;
+                    border-radius: 10px;
+                    margin-bottom: 1rem;
+                    background-color: #fcfcfc;
+                ">
+                    <strong>📌 일정 {i+1}</strong>
+                </div>
+                """, unsafe_allow_html=True)
                 
-                date_str = parsed_data.get('event_date', '')
-                if date_str:
-                    try:
-                        # YYYY-MM-DD 형식 시도
-                        default_date_value = datetime.strptime(date_str, "%Y-%m-%d").date()
-                    except ValueError:
-                        pass
+                # 일정 삭제 버튼 (우측 상단 배치를 위해 컬럼 사용)
+                col_header, col_delete_btn = st.columns([5, 1])
+                with col_delete_btn:
+                    if st.button("🗑️", key=f"del_btn_{i}", help="이 일정 삭제"):
+                        parsed_events.pop(i)
+                        st.session_state['last_analysis_parsed'] = parsed_events
+                        st.rerun()
                 
-                manual_event_date_obj = st.date_input("날짜 (필수)", value=default_date_value, key="manual_event_date_picker")
-                # 문자열로 변환하여 저장
-                manual_event_date = manual_event_date_obj.strftime("%Y-%m-%d") if manual_event_date_obj else ""
-            
-            with col_check_3:
-                # 시간 (선택)
-                default_time = parsed_data.get('event_time', '')
-                # 시간 정보가 날짜 필드에 섞여 있을 경우 추출 시도 (YYYY-MM-DD HH:MM)
-                if not default_time and ' ' in date_str:
-                    try:
-                        _, time_part = date_str.split(' ', 1)
-                        default_time = time_part
-                    except:
-                        pass
-                        
-                manual_event_time = st.text_input("시간 (선택)", value=default_time, key="manual_event_time", placeholder="예: 14:00")
-            
-            # 데이터베이스에서 아이 목록 가져오기
-            children_list = get_children()
-            child_options = ['없음'] + children_list + ['둘 다'] if len(children_list) > 1 else ['없음'] + children_list
-            
-            col_tag, col_save_btn = st.columns([2, 1])
-            with col_tag:
-                # 아이 태그 선택 (데이터베이스에서 가져온 목록 사용)
-                child_tag = st.selectbox(
-                    "👶 아이 선택",
-                    options=child_options,
-                    key="child_tag_select",
-                    help="어떤 아이의 일정인지 선택해주세요"
-                )
-                child_tag_clean = child_tag
-            
-            with col_save_btn:
-                st.markdown("<br>", unsafe_allow_html=True)  # 버튼 정렬을 위한 공백
-                # 필수 항목이 있을 때만 버튼 활성화 로직은 내부에서 처리하거나 알림으로 대체
-                if st.button("📌 내 일정에 저장하기", use_container_width=True, type="primary"):
-                    if manual_event_name and manual_event_date:
+                # 입력 필드 구성
+                col_input_1, col_input_2, col_input_3 = st.columns([2, 1, 1])
+                
+                with col_input_1:
+                    manual_event_name = st.text_input(
+                        "행사명 (필수)", 
+                        value=event_data.get('event_name', ''), 
+                        key=f"event_name_{i}",
+                        placeholder="예: 학부모 상담일"
+                    )
+                
+                with col_input_2:
+                    default_date_value = date.today()
+                    date_str = event_data.get('event_date', '')
+                    if date_str:
                         try:
-                            # 수동 입력값으로 업데이트
-                            parsed_data['event_name'] = manual_event_name
-                            parsed_data['event_date'] = manual_event_date
-                            parsed_data['event_time'] = manual_event_time
-                            parsed_data['child_tag'] = child_tag_clean
-                            
-                            event_id = save_event(parsed_data)
-                            st.success(f"✅ '{manual_event_name}' 일정이 저장되었습니다!")
-                            st.balloons()
-                            st.info("💡 '나의 일정 (Dashboard)' 탭에서 저장된 일정을 확인할 수 있습니다.")
-                        except Exception as e:
-                            st.error(f"❌ 저장 중 오류가 발생했습니다: {str(e)}")
-                    else:
-                        st.warning("⚠️ 행사명과 날짜를 입력해주세요.")
-            
-            if not parsed_data.get('event_name') or not parsed_data.get('event_date'):
-                st.info("💡 AI가 행사명이나 일시를 자동으로 찾지 못했습니다. 직접 입력하여 저장할 수 있습니다.")
+                            default_date_value = datetime.strptime(date_str, "%Y-%m-%d").date()
+                        except ValueError:
+                            pass
+                    
+                    manual_event_date_obj = st.date_input(
+                        "날짜 (필수)", 
+                        value=default_date_value, 
+                        key=f"event_date_{i}"
+                    )
+                    manual_event_date = manual_event_date_obj.strftime("%Y-%m-%d") if manual_event_date_obj else ""
+                
+                with col_input_3:
+                    manual_event_time = st.text_input(
+                        "시간 (선택)", 
+                        value=event_data.get('event_time', ''), 
+                        key=f"event_time_{i}",
+                        placeholder="예: 14:00"
+                    )
+                
+                # 아이 선택 및 저장 버튼
+                # 데이터베이스에서 아이 목록 가져오기
+                children_list = get_children()
+                child_options = ['없음'] + children_list + ['둘 다'] if len(children_list) > 1 else ['없음'] + children_list
+                
+                col_child, col_save = st.columns([2, 1])
+                with col_child:
+                    child_tag = st.selectbox(
+                        "👶 아이 선택",
+                        options=child_options,
+                        key=f"child_select_{i}",
+                        index=0 # 기본값
+                    )
+                
+                with col_save:
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    if st.button("💾 저장하기", key=f"save_btn_{i}", use_container_width=True, type="primary"):
+                        if manual_event_name and manual_event_date:
+                            try:
+                                # 데이터 업데이트
+                                event_data['event_name'] = manual_event_name
+                                event_data['event_date'] = manual_event_date
+                                event_data['event_time'] = manual_event_time
+                                event_data['child_tag'] = child_tag
+                                
+                                save_event(event_data)
+                                st.toast(f"✅ '{manual_event_name}' 저장 완료!", icon="🎉")
+                                # 저장 완료 표시를 위해 아이콘 추가 등 UI 업데이트 가능
+                            except Exception as e:
+                                st.error(f"❌ 저장 실패: {str(e)}")
+                        else:
+                            st.warning("⚠️ 행사명과 날짜를 입력해주세요.")
+                
+                # 추가 정보 (Checklist, Translation 등) 표시 - Expander로 숨김
+                with st.expander("📝 상세 정보 및 준비물 보기", expanded=False):
+                    if event_data.get('checklist_items'):
+                        st.markdown("**✅ 준비물:**")
+                        for item in event_data['checklist_items']:
+                            st.markdown(f"- {item}")
+                    
+                    if event_data.get('translation'):
+                        st.markdown("**🌐 번역:**")
+                        st.write(event_data['translation'])
+                        
+                    if event_data.get('tips'):
+                        st.markdown("**💡 팁:**")
+                        st.info(event_data['tips'])
+
+            if not parsed_events:
+                st.info("💡 표시할 일정이 없습니다. '일정 직접 추가하기' 버튼을 눌러보세요.")
             
             st.markdown("---")
             
