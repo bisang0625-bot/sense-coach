@@ -21,13 +21,19 @@ def get_or_create_user_id():
     # --- 결제 성공 처리 ---
     params = st.query_params
     if params.get("payment_success") == "true" and "uid" in params:
-        target_uid = params["uid"]
+        # 사용자가 대괄호 [ ] 를 포함해 복사했을 경우를 대비해 제거
+        target_uid = params["uid"].strip("[] ")
+        
+        # 실제 운영 환경에서는 Stripe Webhook이나 Checkout Session API로 검증이 필요하지만,
         # 가장 쉬운 구현을 위해 URL 파라미터 기반으로 업데이트 진행
         if update_user_tier(target_uid, "PREMIUM"):
-            st.success("🎉 결제가 성공적으로 완료되었습니다! 프리미엄 혜택이 적용되었습니다.")
-            # 파라미터 제거 및 새로고침
-            st.query_params.clear()
+            st.query_params.clear() # 파라미터 즉시 제거
+            st.success(f"🎉 결제가 성공적으로 완료되었습니다! (ID: {target_uid})")
+            st.balloons() # 축하 효과
+            st.session_state.user_id = target_uid # 세션 ID 동기화
             st.rerun()
+        else:
+            st.error("❌ 등급 업데이트 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.")
 
     return st.session_state.user_id
 
