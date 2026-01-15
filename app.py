@@ -11,18 +11,24 @@ import json
 import html as html_escape
 
 # 모듈화된 유틸리티 임포트
-from database_utils import (
-    init_database, get_children, add_child, delete_child, 
-    update_child_name, save_event, get_events, delete_event, 
-    update_checklist_item, update_event, add_checklist_item, 
-    delete_checklist_item, update_checklist_item_name, reset_all_data
-)
-from ai_logic import analyze_with_gemini, parse_analysis_result, is_valid_checklist_item
-from ui_styles import STYLE_CSS, COLORS
-from subscription_manager import (
-    get_or_create_user_id, check_can_analyze, process_analysis_usage, 
-    render_membership_sidebar, render_paywall
-)
+try:
+    from database_utils import (
+        init_database, get_children, add_child, delete_child, 
+        update_child_name, save_event, get_events, delete_event, 
+        update_checklist_item, update_event, add_checklist_item, 
+        delete_checklist_item, update_checklist_item_name, reset_all_data
+    )
+    from ai_logic import analyze_with_gemini, parse_analysis_result, is_valid_checklist_item
+    from ui_styles import STYLE_CSS, COLORS
+    from subscription_manager import (
+        get_or_create_user_id, check_can_analyze, process_analysis_usage, 
+        render_membership_sidebar, render_paywall
+    )
+except Exception as e:
+    st.error(f"❌ Import Error: {str(e)}")
+    import traceback
+    st.code(traceback.format_exc())
+    st.stop()
 
 # 환경 변수 로드
 load_dotenv()
