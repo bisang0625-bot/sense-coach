@@ -4,27 +4,52 @@ import re
 import os
 from datetime import datetime, date
 import streamlit as st
-from supabase import create_client, Client
+
+# 데이터베이스 연결 캐싱 (세션당 한 번만)
+@st.cache_resource
+def get_db_connection():
+    """데이터베이스 연결을 캐싱하여 성능 향상"""
+    if use_supabase:
+        return None  # Supabase는 클라이언트를 사용하므로 연결 불필요
+    return sqlite3.connect('school_events.db', check_same_thread=False)
+
+# Supabase는 선택적 의존성 (설치되지 않아도 SQLite로 작동)
+try:
+    from supabase import create_client, Client
+    SUPABASE_AVAILABLE = True
+except ImportError:
+    SUPABASE_AVAILABLE = False
+    Client = None
 
 # Supabase 설정 (Streamlit Secrets 또는 .env에서 가져옴)
 # local .env: SUPABASE_URL, SUPABASE_KEY
 # streamlit secrets: [supabase] url = "...", key = "..."
-SUPABASE_URL = os.getenv("SUPABASE_URL") or st.secrets.get("supabase", {}).get("url")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY") or st.secrets.get("supabase", {}).get("key")
+SUPABASE_URL = None
+SUPABASE_KEY = None
+supabase = None
 
-use_supabase = SUPABASE_URL and SUPABASE_KEY
+if SUPABASE_AVAILABLE:
+    try:
+        SUPABASE_URL = os.getenv("SUPABASE_URL") or st.secrets.get("supabase", {}).get("url")
+        SUPABASE_KEY = os.getenv("SUPABASE_KEY") or st.secrets.get("supabase", {}).get("key")
+    except:
+        pass
+
+use_supabase = SUPABASE_AVAILABLE and SUPABASE_URL and SUPABASE_KEY
 
 if use_supabase:
     supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
+@st.cache_resource
 def init_database():
-    """데이터베이스 초기화 및 테이블 생성"""
+    """데이터베이스 초기화 및 테이블 생성 (캐싱됨)"""
     if use_supabase:
         # Supabase는 대시보드에서 직접 테이블을 생성하는 것이 권장되지만, 
         # 여기서는 연결 확인 정도로만 사용 (실제 테이블 생성 SQL은 가이드 제공)
         return
     
-    conn = sqlite3.connect('school_events.db')
+    # 초기화는 별도 연결 사용 (캐시된 연결은 쓰기 전용이 아님)
+    conn = sqlite3.connect('school_events.db', check_same_thread=False)
     c = conn.cursor()
     
     # 이벤트 테이블 생성
@@ -93,10 +118,11 @@ def init_database():
     ''')
     
     conn.commit()
-    conn.close()
+    conn.close()  # 초기화 전용 연결은 닫음
 
-def get_children():
-    """저장된 아이 목록 조회"""
+@st.cache_data(ttl=60)  # 60초 캐싱 (데이터 변경 시 수동으로 캐시 무효화 필요)
+def get_children(_conn=None):
+    """저장된 아이 목록 조회 (캐싱됨)"""
     if use_supabase:
         try:
             response = supabase.table("children").select("name").order("display_order").execute()
@@ -105,11 +131,11 @@ def get_children():
             st.error(f"Supabase Error (get_children): {e}")
             return []
             
-    conn = sqlite3.connect('school_events.db')
-    c = conn.cursor()
+    if _conn is None:
+        _conn = get_db_connection()
+    c = _conn.cursor()
     c.execute('SELECT name FROM children ORDER BY display_order ASC, id ASC')
     children = [row[0] for row in c.fetchall()]
-    conn.close()
     return children if children else []
 
 def add_child(name):
@@ -127,7 +153,7 @@ def add_child(name):
             st.error(f"Supabase Error (add_child): {e}")
             return False
 
-    conn = sqlite3.connect('school_events.db')
+    conn = get_db_connection()
     c = conn.cursor()
     try:
         c.execute('SELECT MAX(display_order) FROM children')
@@ -135,10 +161,11 @@ def add_child(name):
         next_order = (max_order or 0) + 1
         c.execute('INSERT INTO children (name, display_order) VALUES (?, ?)', (name, next_order))
         conn.commit()
-        conn.close()
+        # 캐시 무효화
+        get_children.clear()
         return True
     except sqlite3.IntegrityError:
-        conn.close()
+        conn.rollback()
         return False
 
 def delete_child(name):
@@ -147,11 +174,12 @@ def delete_child(name):
         supabase.table("children").delete().eq("name", name).execute()
         return
 
-    conn = sqlite3.connect('school_events.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('DELETE FROM children WHERE name = ?', (name,))
     conn.commit()
-    conn.close()
+    # 캐시 무효화
+    get_children.clear()
 
 def update_child_name(old_name, new_name):
     """아이 이름 수정"""
@@ -163,17 +191,18 @@ def update_child_name(old_name, new_name):
         except Exception as e:
             return False
 
-    conn = sqlite3.connect('school_events.db')
+    conn = get_db_connection()
     c = conn.cursor()
     try:
         c.execute('UPDATE children SET name = ? WHERE name = ?', (new_name, old_name))
         c.execute('UPDATE events SET child_tag = ? WHERE child_tag = ?', (new_name, old_name))
         conn.commit()
-        conn.close()
+        # 캐시 무효화
+        get_children.clear()
+        get_events.clear()
         return True
     except sqlite3.IntegrityError:
         conn.rollback()
-        conn.close()
         return False
 
 def save_event(event_data):
@@ -206,7 +235,7 @@ def save_event(event_data):
             st.error(f"Supabase Error (save_event): {e}")
             raise e
 
-    conn = sqlite3.connect('school_events.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('''
         INSERT INTO events 
@@ -229,7 +258,8 @@ def save_event(event_data):
     for item in valid_items:
         c.execute('INSERT INTO checklist_items (event_id, item_name, is_checked) VALUES (?, ?, 0)', (event_id, item))
     conn.commit()
-    conn.close()
+    # 캐시 무효화
+    get_events.clear()
     return event_id
 
 def safe_json_loads(data):
@@ -245,8 +275,9 @@ def safe_json_loads(data):
         pass
     return []
 
-def get_events(future_only=False):
-    """이벤트 조회"""
+@st.cache_data(ttl=30)  # 30초 캐싱 (데이터 변경 시 수동으로 캐시 무효화 필요)
+def get_events(future_only=False, _conn=None):
+    """이벤트 조회 (캐싱됨)"""
     if use_supabase:
         try:
             # checklist_items 컬럼과 테이블명이 중복되므로 별칭(checklist_rel) 사용
@@ -281,8 +312,9 @@ def get_events(future_only=False):
             st.error(f"Supabase Error (get_events): {e}")
             return []
 
-    conn = sqlite3.connect('school_events.db')
-    c = conn.cursor()
+    if _conn is None:
+        _conn = get_db_connection()
+    c = _conn.cursor()
     if future_only:
         today = date.today().isoformat()
         c.execute('SELECT * FROM events WHERE event_date >= ? ORDER BY event_date ASC, event_time ASC', (today,))
@@ -305,7 +337,6 @@ def get_events(future_only=False):
             for i_row in c.fetchall()
         ]
         events.append(event)
-    conn.close()
     return events
 
 def delete_event(event_id):
@@ -314,11 +345,12 @@ def delete_event(event_id):
         supabase.table("events").delete().eq("id", event_id).execute()
         return
 
-    conn = sqlite3.connect('school_events.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('DELETE FROM events WHERE id = ?', (event_id,))
     conn.commit()
-    conn.close()
+    # 캐시 무효화
+    get_events.clear()
 
 def update_checklist_item(item_id, is_checked):
     """체크리스트 항목 상태 업데이트"""
@@ -326,11 +358,12 @@ def update_checklist_item(item_id, is_checked):
         supabase.table("checklist_items").update({"is_checked": 1 if is_checked else 0}).eq("id", item_id).execute()
         return
 
-    conn = sqlite3.connect('school_events.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('UPDATE checklist_items SET is_checked = ? WHERE id = ?', (1 if is_checked else 0, item_id))
     conn.commit()
-    conn.close()
+    # 캐시 무효화
+    get_events.clear()
 
 def update_event(event_id, event_data):
     """이벤트 정보 업데이트"""
@@ -345,7 +378,7 @@ def update_event(event_id, event_data):
         }).eq("id", event_id).execute()
         return
 
-    conn = sqlite3.connect('school_events.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('''
         UPDATE events 
@@ -358,7 +391,8 @@ def update_event(event_id, event_data):
         event_id
     ))
     conn.commit()
-    conn.close()
+    # 캐시 무효화
+    get_events.clear()
 
 def add_checklist_item(event_id, item_name):
     """체크리스트 항목 추가"""
@@ -366,11 +400,12 @@ def add_checklist_item(event_id, item_name):
         supabase.table("checklist_items").insert({"event_id": event_id, "item_name": item_name.strip(), "is_checked": 0}).execute()
         return
 
-    conn = sqlite3.connect('school_events.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('INSERT INTO checklist_items (event_id, item_name, is_checked) VALUES (?, ?, 0)', (event_id, item_name.strip()))
     conn.commit()
-    conn.close()
+    # 캐시 무효화
+    get_events.clear()
 
 def delete_checklist_item(item_id):
     """체크리스트 항목 삭제"""
@@ -378,11 +413,12 @@ def delete_checklist_item(item_id):
         supabase.table("checklist_items").delete().eq("id", item_id).execute()
         return
 
-    conn = sqlite3.connect('school_events.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('DELETE FROM checklist_items WHERE id = ?', (item_id,))
     conn.commit()
-    conn.close()
+    # 캐시 무효화
+    get_events.clear()
 
 def update_checklist_item_name(item_id, new_name):
     """체크리스트 항목 이름 수정"""
@@ -390,11 +426,12 @@ def update_checklist_item_name(item_id, new_name):
         supabase.table("checklist_items").update({"item_name": new_name.strip()}).eq("id", item_id).execute()
         return
 
-    conn = sqlite3.connect('school_events.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('UPDATE checklist_items SET item_name = ? WHERE id = ?', (new_name.strip(), item_id))
     conn.commit()
-    conn.close()
+    # 캐시 무효화
+    get_events.clear()
 
 def reset_all_data():
     """모든 데이터 삭제"""
@@ -404,13 +441,15 @@ def reset_all_data():
         supabase.table("children").delete().neq("id", 0).execute()
         return
 
-    conn = sqlite3.connect('school_events.db')
+    conn = get_db_connection()
     c = conn.cursor()
     c.execute('DELETE FROM events')
     c.execute('DELETE FROM checklist_items')
     c.execute('DELETE FROM children')
     conn.commit()
-    conn.close()
+    # 캐시 무효화
+    get_events.clear()
+    get_children.clear()
 
 def get_user_tier(user_id):
     """사용자 구독 등급 조회"""

@@ -42,6 +42,16 @@ st.set_page_config(
 # 스타일 적용
 st.markdown(STYLE_CSS, unsafe_allow_html=True)
 
+# 커스텀 아이콘 상수 (성능 최적화 - 매번 생성하지 않음)
+ICON_SEARCH = """<span class="custom-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></span>"""
+ICON_CALENDAR = """<span class="custom-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>"""
+ICON_GLOBE = """<span class="custom-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>"""
+ICON_USER = """<span class="custom-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>"""
+ICON_CHECK = """<span class="custom-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><polyline points="20 6 9 17 4 12"/></svg></span>"""
+ICON_EDIT = """<span class="custom-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>"""
+ICON_ARROW_RIGHT = """<span class="custom-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>"""
+ICON_LIST = """<span class="custom-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>"""
+
 def calculate_dday(event_date_str):
     """D-day 계산"""
     try:
@@ -69,7 +79,7 @@ def calculate_progress(checklist_items):
 
 def render_dashboard():
     """대시보드 UI 렌더링"""
-    st.markdown("### 📅 나의 일정 (Dashboard)")
+    st.markdown(f"""### {ICON_CALENDAR}나의 일정 (Dashboard)""", unsafe_allow_html=True)
     
     # 데이터베이스 초기화
     init_database()
@@ -79,7 +89,7 @@ def render_dashboard():
         st.session_state.selected_event_id = None
     
     # 다가오는 이벤트 섹션
-    st.markdown("#### 🔜 다가오는 이벤트")
+    st.markdown(f"""#### {ICON_ARROW_RIGHT}다가오는 이벤트""", unsafe_allow_html=True)
     future_events = get_events(future_only=True)
     
     # 아이 태그 색상 설정
@@ -108,39 +118,54 @@ def render_dashboard():
             with col_card:
                 st.markdown(f"""
                     <div style="
-                        background: linear-gradient(135deg, #ffffff 0%, #fafafa 100%);
-                        padding: 0.8rem 1rem;
-                        border-radius: 12px;
-                        margin: 0.3rem 0;
+                        background: rgba(255, 255, 255, 0.95);
+                        backdrop-filter: blur(20px);
+                        padding: 1rem 1.2rem;
+                        border-radius: 16px;
+                        margin: 0.4rem 0;
                         border: {border_width} solid {border_color};
-                        border-left: 4px solid {tag_color};
+                        border-left: 5px solid {tag_color};
                         display: flex;
                         align-items: center;
                         justify-content: space-between;
                         cursor: pointer;
-                    ">
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+                        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                    " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 20px rgba(0, 0, 0, 0.12)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(0, 0, 0, 0.08)';">
+                        <div style="display: flex; align-items: center; gap: 14px;">
                             <span style="
                                 background: {dday_color};
                                 color: white;
-                                padding: 0.3rem 0.6rem;
-                                border-radius: 8px;
-                                font-weight: bold;
+                                padding: 0.4rem 0.8rem;
+                                border-radius: 10px;
+                                font-weight: 700;
                                 font-size: 0.85rem;
-                                min-width: 50px;
+                                min-width: 55px;
                                 text-align: center;
+                                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+                                letter-spacing: 0.5px;
                             ">{dday_text}</span>
                             <div>
-                                <strong style="color: #333; font-size: 1rem;">{event['event_name']}</strong>
-                                <div style="color: #888; font-size: 0.8rem;">
-                                    📅 {event.get('event_date', '')} {event.get('event_time', '')} 
-                                    <span style="background-color: {tag_color}; padding: 0.1rem 0.4rem; border-radius: 4px; margin-left: 5px; font-size: 0.75rem;">👶 {event.get('child_tag', '없음')}</span>
+                                <strong style="color: #1F2937; font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em;">{event['event_name']}</strong>
+                                <div style="color: #6B7280; font-size: 0.85rem; margin-top: 0.2rem;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+                                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                                        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
+                                    </svg>
+                                    {event.get('event_date', '')} {event.get('event_time', '')} 
+                                    <span style="background: {tag_color}; color: white; padding: 0.2rem 0.5rem; border-radius: 6px; margin-left: 6px; font-size: 0.75rem; font-weight: 500;">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 3px;">
+                                            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+                                            <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                        </svg>
+                                        {event.get('child_tag', '없음')}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-                        <div style="text-align: right; min-width: 80px;">
-                            <div style="font-size: 0.75rem; color: #888;">준비물</div>
-                            <div style="font-weight: bold; color: {'#4ECDC4' if progress == 100 else '#FFB347'};">{checked}/{total}</div>
+                        <div style="text-align: right; min-width: 85px;">
+                            <div style="font-size: 0.75rem; color: #6B7280; font-weight: 500; margin-bottom: 0.2rem;">준비물</div>
+                            <div style="font-weight: 700; font-size: 1.1rem; color: {'#10B981' if progress == 100 else '#F59E0B'};">{checked}/{total}</div>
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
@@ -246,30 +271,47 @@ def render_event_compact_detail(event, tag_colors, is_past, prefix):
         memo_display = memo_escaped.replace('\n', '<br>')
         st.markdown(f"""
             <div style="
-                background: #FFF9E6;
-                padding: 0.8rem;
-                border-radius: 8px;
-                border-left: 3px solid #FFD93D;
-                margin-bottom: 1rem;
+                background: linear-gradient(135deg, rgba(255, 249, 230, 0.95) 0%, rgba(255, 245, 230, 0.95) 100%);
+                backdrop-filter: blur(20px);
+                padding: 1.2rem;
+                border-radius: 16px;
+                border: 1px solid rgba(245, 158, 11, 0.2);
+                border-left: 5px solid #F59E0B;
+                margin-bottom: 1.2rem;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
             ">
-                <strong>📝 메모:</strong><br>{memo_display}
+                <strong style="color: #1F2937; font-weight: 600; font-size: 1rem;">메모:</strong><br>
+                <div style="margin-top: 0.5rem; color: #4B5563; line-height: 1.7;">{memo_display}</div>
             </div>
         """, unsafe_allow_html=True)
     
     # 상세 정보 카드
-    st.markdown(f"""
-        <div style="
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-            border-left: 4px solid {tag_color};
-        ">
-            <p><strong>📅 날짜:</strong> {event.get('event_date', '')} {event.get('event_time', '')}</p>
-            <p><strong>👶 아이:</strong> <span style="background-color: {tag_color}; padding: 0.2rem 0.5rem; border-radius: 5px;">{event.get('child_tag', '없음')}</span></p>
-            <p><strong>✅ 준비물 진행률:</strong> {checked}/{total} 완료</p>
-        </div>
-    """, unsafe_allow_html=True)
+        st.markdown(f"""
+            <div style="
+                background: rgba(255, 255, 255, 0.95);
+                backdrop-filter: blur(20px);
+                padding: 1.2rem;
+                border-radius: 16px;
+                margin-bottom: 1rem;
+                border: 1px solid rgba(255, 255, 255, 0.5);
+                border-left: 5px solid {tag_color};
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            ">
+                <p style="margin: 0.6rem 0; font-size: 0.95rem; color: #4B5563;"><strong style="color: #1F2937; font-weight: 600;">날짜:</strong> 
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin: 0 4px;">
+                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    {event.get('event_date', '')} {event.get('event_time', '')}
+                </p>
+                <p style="margin: 0.6rem 0; font-size: 0.95rem; color: #4B5563;"><strong style="color: #1F2937; font-weight: 600;">아이:</strong> 
+                    <span style="background: {tag_color}; color: white; padding: 0.25rem 0.6rem; border-radius: 7px; font-weight: 500; margin-left: 6px; display: inline-block;">{event.get('child_tag', '없음')}</span>
+                </p>
+                <p style="margin: 0.6rem 0; font-size: 0.95rem; color: #4B5563;"><strong style="color: #1F2937; font-weight: 600;">준비물 진행률:</strong> 
+                    <span style="color: {'#10B981' if progress == 100 else '#F59E0B'}; font-weight: 600; margin-left: 6px;">{checked}/{total} 완료</span>
+                </p>
+            </div>
+        """, unsafe_allow_html=True)
     
     # 진행률 바
     if total > 0:
@@ -324,23 +366,39 @@ def render_event_detail(event, tag_colors, is_past, prefix):
     if memo_content:
         memo_escaped = html_escape.escape(memo_content)
         memo_display = memo_escaped.replace('\n', '<br>')
-        memo_html = f'<p style="background: #FFF9E6; padding: 0.8rem; border-radius: 8px; border-left: 3px solid #FFD93D;"><strong>📝 메모:</strong><br>{memo_display}</p>'
+        memo_html = f'<div style="background: linear-gradient(135deg, rgba(255, 249, 230, 0.95) 0%, rgba(255, 245, 230, 0.95) 100%); backdrop-filter: blur(20px); padding: 1.2rem; border-radius: 16px; border: 1px solid rgba(245, 158, 11, 0.2); border-left: 5px solid #F59E0B; margin-top: 1rem; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);"><strong style="color: #1F2937; font-weight: 600; font-size: 1rem;">메모:</strong><br><div style="margin-top: 0.5rem; color: #4B5563; line-height: 1.7;">{memo_display}</div></div>'
     
-    # 상세 카드
+    # 상세 카드 (프리미엄 디자인)
     st.markdown(f"""
         <div style="
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin: 1rem 0;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            border-left: 5px solid {tag_color};
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 2rem;
+            border-radius: 20px;
+            margin: 1.5rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 1px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-left: 6px solid {tag_color};
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
         ">
-            <h3 style="color: #8B7D9B; margin-top: 0; margin-bottom: 1rem;">{event['event_name']}</h3>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                <p><strong>📅 날짜:</strong> {event['event_date']} {event.get('event_time', '')}</p>
-                <p><strong>👶 아이:</strong> <span style="background-color: {tag_color}; padding: 0.2rem 0.5rem; border-radius: 5px;">{event.get('child_tag', '없음')}</span></p>
-                <p><strong>✅ 준비:</strong> {checked}/{total} 완료</p>
+            <div style="position: absolute; top: 0; right: 0; width: 200px; height: 200px; background: radial-gradient(circle, {tag_color}15 0%, transparent 70%); border-radius: 50%; transform: translate(50%, -50%);"></div>
+            <h3 style="color: #1F2937; margin-top: 0; margin-bottom: 1.5rem; font-weight: 700; font-size: 1.5rem; letter-spacing: -0.02em; position: relative; z-index: 1;">{event['event_name']}</h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; position: relative; z-index: 1;">
+                <p style="margin: 0.5rem 0; font-size: 1rem; color: #4B5563;"><strong style="color: #1F2937; font-weight: 600;">날짜:</strong> 
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 4px; margin-left: 6px;">
+                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                        <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    {event['event_date']} {event.get('event_time', '')}
+                </p>
+                <p style="margin: 0.5rem 0; font-size: 1rem; color: #4B5563;"><strong style="color: #1F2937; font-weight: 600;">아이:</strong> 
+                    <span style="background: {tag_color}; color: white; padding: 0.3rem 0.7rem; border-radius: 8px; font-weight: 500; margin-left: 6px; display: inline-block; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);">{event.get('child_tag', '없음')}</span>
+                </p>
+                <p style="margin: 0.5rem 0; font-size: 1rem; color: #4B5563;"><strong style="color: #1F2937; font-weight: 600;">준비:</strong> 
+                    <span style="color: {'#10B981' if progress == 100 else '#F59E0B'}; font-weight: 600; margin-left: 6px;">{checked}/{total} 완료</span>
+                </p>
             </div>
             {memo_html}
         </div>
@@ -536,11 +594,13 @@ def main():
         # selectbox에서 현재 선택된 국가의 인덱스 찾기
         default_index = country_options.index(st.session_state.selected_country) if st.session_state.selected_country in country_options else 0
         
+        st.markdown(f"""**{ICON_GLOBE} 국가 선택**""", unsafe_allow_html=True)
         country = st.selectbox(
-            "🌍 국가 선택",
+            "국가를 선택하세요",
             options=country_options,
             index=default_index,
-            key="country_selectbox"
+            key="country_selectbox",
+            label_visibility="collapsed"
         )
         
         # 국가가 변경되면 session_state에 저장
@@ -568,7 +628,7 @@ def main():
         
         # 아이 관리 섹션 (자연스러운 구분선과 간격)
         st.markdown("<div style='margin-top: 2rem; padding-top: 1.5rem; border-top: 2px solid #e8e8e8;'></div>", unsafe_allow_html=True)
-        st.markdown("### 👶 아이 관리")
+        st.markdown(f"""### {ICON_USER}아이 관리""", unsafe_allow_html=True)
         children_list = get_children()
         
         if children_list:
@@ -699,17 +759,39 @@ def main():
             </div>
         """, unsafe_allow_html=True)
     
-    # 메인 영역 - 커스텀 제목 디자인
+    # 메인 영역 - 커스텀 제목 디자인 (프리미엄 스타일)
     st.markdown("""
         <div class="app-title">
-            <span style="font-size: 2rem;">🎒</span>
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.2rem;">
+            <div style="
+                width: 60px;
+                height: 60px;
+                background: rgba(255, 255, 255, 0.25);
+                backdrop-filter: blur(10px);
+                border-radius: 16px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 2px solid rgba(255, 255, 255, 0.3);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                position: relative;
+                z-index: 1;
+            ">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+                    <path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(255,255,255,0.1)"/>
+                    <path d="M8 6h8M8 10h8M8 14h5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 0.3rem; position: relative; z-index: 1;">
                 <span class="app-title-main" style="white-space: nowrap;">눈치코치 알림장</span>
-                <span class="app-title-main" style="font-size: 1.2rem; font-weight: 600; opacity: 0.9;">Sense Coach</span>
+                <span class="app-title-main" style="font-size: 1.2rem; font-weight: 600; opacity: 0.95;">Sense Coach</span>
             </div>
         </div>
         <div class="app-title-subtitle">
-            🌍 현지 학교 알림장의 행간을 읽어주는<br>AI 문화 비서
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="rgba(255,255,255,0.1)"/>
+                <path d="M12 2a15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0 4 10 15.3 15.3 0 0 0 4-10 15.3 15.3 0 0 0-4-10z" fill="currentColor"/>
+            </svg>
+            현지 학교 알림장의 행간을 읽어주는<br>AI 문화 비서
         </div>
     """, unsafe_allow_html=True)
     st.markdown("---")
@@ -719,20 +801,20 @@ def main():
         render_paywall()
         st.stop()
         
-    # 탭 생성
+    # 탭 생성 (커스텀 스타일) - Streamlit 탭은 이모지만 지원하므로 유지
     tab1, tab2 = st.tabs(["🔍 분석하기 (Analysis)", "📅 나의 일정 (Dashboard)"])
     
     with tab1:
         # 텍스트 입력
-        st.markdown("### 📝 학교 알림장 입력")
+        st.markdown(f"""### {ICON_EDIT}학교 알림장 입력""", unsafe_allow_html=True)
         text_input = st.text_area(
             "알림장 내용을 붙여넣어주세요",
             height=200,
             placeholder="학교에서 받은 알림장의 내용을 여기에 붙여넣어주세요..."
         )
         
-        # 이미지 업로드
-        st.markdown("### 📷 이미지 업로드 (Vision AI 강화)")
+        # 이미지 업로드  
+        st.markdown(f"""### {ICON_LIST}이미지 업로드 (Vision AI 강화)""", unsafe_allow_html=True)
         image_input = st.file_uploader(
             "알림장 스크린샷 또는 사진을 업로드하세요",
             type=["png", "jpg", "jpeg", "webp"],
@@ -746,7 +828,7 @@ def main():
         st.markdown("---")
         
         # 분석 버튼
-        analyze_button = st.button("🔍 분석하기", use_container_width=True)
+        analyze_button = st.button("분석하기", use_container_width=True)
         
         # 분석 실행
         if analyze_button:
