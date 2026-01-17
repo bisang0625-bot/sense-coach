@@ -472,28 +472,51 @@ STYLE_CSS = f"""
         justify-content: center;
         width: 1.2em;
         height: 1.2em;
+        max-width: 20px;
+        max-height: 20px;
         margin-right: 0.5em;
         vertical-align: middle;
         flex-shrink: 0;
+        color: {COLORS["TEXT_MEDIUM"]};
     }}
     
     .custom-icon svg {{
         width: 100%;
         height: 100%;
+        max-width: 20px;
+        max-height: 20px;
         stroke: currentColor;
-        fill: none;
-        stroke-width: 2;
+        fill: currentColor;
+        stroke-width: 1.5;
         stroke-linecap: round;
         stroke-linejoin: round;
+        color: inherit;
     }}
     
-    /* 탭과 제목의 아이콘 스타일 */
-    .stTabs [data-baseweb="tab"] .custom-icon,
+    /* 아이콘 내부 path와 circle도 색상 상속 */
+    .custom-icon svg path,
+    .custom-icon svg circle,
+    .custom-icon svg line,
+    .custom-icon svg polyline,
+    .custom-icon svg rect {{
+        stroke: currentColor;
+        fill: none;
+        color: inherit;
+    }}
+    
+    /* 제목의 아이콘 크기 조정 */
     h3 .custom-icon,
     h2 .custom-icon {{
         width: 1.1em;
         height: 1.1em;
+        max-width: 18px;
+        max-height: 18px;
         margin-right: 0.4em;
+    }}
+    
+    /* 사이드바 아이콘 색상 조정 */
+    [data-testid="stSidebar"] .custom-icon {{
+        color: {COLORS["TEXT"]};
     }}
     
     /* 모바일 반응형 */

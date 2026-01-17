@@ -763,20 +763,19 @@ def main():
     st.markdown("""
         <div class="app-title">
             <div style="
-                width: 60px;
-                height: 60px;
+                width: 48px;
+                height: 48px;
                 background: rgba(255, 255, 255, 0.25);
-                backdrop-filter: blur(10px);
-                border-radius: 16px;
+                border-radius: 12px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 border: 2px solid rgba(255, 255, 255, 0.3);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
                 position: relative;
                 z-index: 1;
             ">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M6 2h12a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="rgba(255,255,255,0.1)"/>
                     <path d="M8 6h8M8 10h8M8 14h5" stroke="white" stroke-width="2" stroke-linecap="round"/>
                 </svg>
@@ -787,11 +786,7 @@ def main():
             </div>
         </div>
         <div class="app-title-subtitle">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle; margin-right: 6px;">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="rgba(255,255,255,0.1)"/>
-                <path d="M12 2a15.3 15.3 0 0 0-4 10 15.3 15.3 0 0 0 4 10 15.3 15.3 0 0 0 4-10 15.3 15.3 0 0 0-4-10z" fill="currentColor"/>
-            </svg>
-            현지 학교 알림장의 행간을 읽어주는<br>AI 문화 비서
+            <span style="font-size: 0.9em; opacity: 0.9;">현지 학교 알림장의 행간을 읽어주는<br>AI 문화 비서</span>
         </div>
     """, unsafe_allow_html=True)
     st.markdown("---")
