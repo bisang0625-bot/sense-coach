@@ -8,7 +8,9 @@ import {
     TextInput,
     Alert,
     ActivityIndicator,
+    Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { saveEvent, getChildren } from '../services/api';
 
 interface ResultScreenProps {
@@ -21,6 +23,11 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ route, navigation }) => {
     const [saving, setSaving] = useState(false);
     const [children, setChildren] = useState<string[]>([]);
     const [expandedTranslation, setExpandedTranslation] = useState<number | null>(null);
+
+    // DateTimePicker 상태
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
+    const [pickerEventIndex, setPickerEventIndex] = useState<number | null>(null);
 
     // 분석 결과를 로컬 상태로 관리하여 편집 가능하게 함
     const [events, setEvents] = useState<any[]>([]);
@@ -55,6 +62,49 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ route, navigation }) => {
             }
             return newEvents;
         });
+    };
+
+    // 날짜 선택 핸들러
+    const handleDateChange = (event: any, selectedDate?: Date) => {
+        setShowDatePicker(Platform.OS === 'ios');
+        if (selectedDate && pickerEventIndex !== null) {
+            const dateStr = selectedDate.toISOString().split('T')[0]; // YYYY-MM-DD
+            updateEventField(pickerEventIndex, 'event_date', dateStr);
+        }
+        if (Platform.OS === 'android') {
+            setShowDatePicker(false);
+        }
+    };
+
+    // 시간 선택 핸들러
+    const handleTimeChange = (event: any, selectedTime?: Date) => {
+        setShowTimePicker(Platform.OS === 'ios');
+        if (selectedTime && pickerEventIndex !== null) {
+            const hours = selectedTime.getHours().toString().padStart(2, '0');
+            const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+            updateEventField(pickerEventIndex, 'event_time', `${hours}:${minutes}`);
+        }
+        if (Platform.OS === 'android') {
+            setShowTimePicker(false);
+        }
+    };
+
+    // 현재 날짜를 Date 객체로 변환
+    const getDateFromString = (dateStr: string): Date => {
+        if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            return new Date(dateStr + 'T00:00:00');
+        }
+        return new Date();
+    };
+
+    // 현재 시간을 Date 객체로 변환
+    const getTimeFromString = (timeStr: string): Date => {
+        const now = new Date();
+        if (timeStr && /^\d{1,2}:\d{2}$/.test(timeStr)) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            now.setHours(hours, minutes, 0, 0);
+        }
+        return now;
     };
 
     const toggleChildTag = (index: number, childName: string) => {
@@ -163,24 +213,34 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ route, navigation }) => {
                             <View style={styles.infoRow}>
                                 <Text style={styles.infoLabel}>📅 일시</Text>
                                 <View style={styles.dateTimeRow}>
-                                    <TextInput
-                                        style={[styles.inlineInput, { flex: 1, marginRight: 8 }]}
-                                        value={event.event_date || ''}
-                                        placeholder="YYYY-MM-DD"
-                                        onChangeText={(val) => updateEventField(index, 'event_date', val)}
-                                        editable={!event.is_saved}
-                                        autoCorrect={false}
-                                        autoCapitalize="none"
-                                    />
-                                    <TextInput
-                                        style={[styles.inlineInput, { flex: 0.6 }]}
-                                        value={event.event_time || ''}
-                                        placeholder="HH:MM"
-                                        onChangeText={(val) => updateEventField(index, 'event_time', val)}
-                                        editable={!event.is_saved}
-                                        autoCorrect={false}
-                                        autoCapitalize="none"
-                                    />
+                                    <TouchableOpacity
+                                        style={[styles.datePickerButton, { flex: 1, marginRight: 8 }]}
+                                        onPress={() => {
+                                            if (!event.is_saved) {
+                                                setPickerEventIndex(index);
+                                                setShowDatePicker(true);
+                                            }
+                                        }}
+                                        disabled={event.is_saved}
+                                    >
+                                        <Text style={styles.datePickerText}>
+                                            {event.event_date || '📅 날짜 선택'}
+                                        </Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.datePickerButton, { flex: 0.6 }]}
+                                        onPress={() => {
+                                            if (!event.is_saved) {
+                                                setPickerEventIndex(index);
+                                                setShowTimePicker(true);
+                                            }
+                                        }}
+                                        disabled={event.is_saved}
+                                    >
+                                        <Text style={styles.datePickerText}>
+                                            {event.event_time || '⏰ 시간'}
+                                        </Text>
+                                    </TouchableOpacity>
                                 </View>
                             </View>
 
@@ -272,6 +332,25 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ route, navigation }) => {
                 </TouchableOpacity>
             </View>
             <View style={{ height: 40 }} />
+
+            {/* DateTimePicker 레이어 */}
+            {showDatePicker && pickerEventIndex !== null && (
+                <DateTimePicker
+                    value={getDateFromString(events[pickerEventIndex]?.event_date || '')}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleDateChange}
+                />
+            )}
+            {showTimePicker && pickerEventIndex !== null && (
+                <DateTimePicker
+                    value={getTimeFromString(events[pickerEventIndex]?.event_time || '')}
+                    mode="time"
+                    is24Hour={true}
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleTimeChange}
+                />
+            )}
         </ScrollView>
     );
 };
@@ -401,6 +480,20 @@ const styles = StyleSheet.create({
     },
     dateTimeRow: {
         flexDirection: 'row',
+    },
+    datePickerButton: {
+        backgroundColor: '#f8f9fa',
+        borderRadius: 8,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#4ECDC4',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    datePickerText: {
+        fontSize: 15,
+        color: '#333',
+        fontWeight: '500',
     },
     childSection: {
         marginTop: 4,

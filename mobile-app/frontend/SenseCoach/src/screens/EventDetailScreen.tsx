@@ -8,7 +8,9 @@ import {
     TextInput,
     Alert,
     ActivityIndicator,
+    Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import {
     getEventById,
     updateEvent,
@@ -37,6 +39,10 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
     const [editedTime, setEditedTime] = useState('');
     const [editedChild, setEditedChild] = useState('');
     const [editedMemo, setEditedMemo] = useState('');
+
+    // DateTimePicker 상태
+    const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
 
     useEffect(() => {
         fetchData();
@@ -123,6 +129,49 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
         }
     };
 
+    // 날짜 선택 핸들러
+    const handleDateChange = (event: any, selectedDate?: Date) => {
+        setShowDatePicker(Platform.OS === 'ios');
+        if (selectedDate) {
+            const dateStr = selectedDate.toISOString().split('T')[0];
+            setEditedDate(dateStr);
+        }
+        if (Platform.OS === 'android') {
+            setShowDatePicker(false);
+        }
+    };
+
+    // 시간 선택 핸들러
+    const handleTimeChange = (event: any, selectedTime?: Date) => {
+        setShowTimePicker(Platform.OS === 'ios');
+        if (selectedTime) {
+            const hours = selectedTime.getHours().toString().padStart(2, '0');
+            const minutes = selectedTime.getMinutes().toString().padStart(2, '0');
+            setEditedTime(`${hours}:${minutes}`);
+        }
+        if (Platform.OS === 'android') {
+            setShowTimePicker(false);
+        }
+    };
+
+    // 현재 날짜를 Date 객체로 변환
+    const getDateFromString = (dateStr: string): Date => {
+        if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+            return new Date(dateStr + 'T00:00:00');
+        }
+        return new Date();
+    };
+
+    // 현재 시간을 Date 객체로 변환
+    const getTimeFromString = (timeStr: string): Date => {
+        const now = new Date();
+        if (timeStr && /^\d{1,2}:\d{2}$/.test(timeStr)) {
+            const [hours, minutes] = timeStr.split(':').map(Number);
+            now.setHours(hours, minutes, 0, 0);
+        }
+        return now;
+    };
+
     if (loading && !event) {
         return (
             <View style={styles.center}>
@@ -150,24 +199,25 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
                         <View style={styles.row}>
                             <View style={{ flex: 1, marginRight: 8 }}>
                                 <Text style={styles.label}>📅 날짜</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedDate}
-                                    placeholder="YYYY-MM-DD"
-                                    onChangeText={setEditedDate}
-                                    autoCorrect={false}
-                                    autoCapitalize="none"
-                                />
+                                <TouchableOpacity
+                                    style={styles.datePickerButton}
+                                    onPress={() => setShowDatePicker(true)}
+                                >
+                                    <Text style={styles.datePickerText}>
+                                        {editedDate || '📅 날짜 선택'}
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
                             <View style={{ flex: 1, marginLeft: 8 }}>
                                 <Text style={styles.label}>⏰ 시간</Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={editedTime}
-                                    onChangeText={setEditedTime}
-                                    autoCorrect={false}
-                                    autoCapitalize="none"
-                                />
+                                <TouchableOpacity
+                                    style={styles.datePickerButton}
+                                    onPress={() => setShowTimePicker(true)}
+                                >
+                                    <Text style={styles.datePickerText}>
+                                        {editedTime || '⏰ 시간 선택'}
+                                    </Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
                         <Text style={styles.label}>👶 아이 선택</Text>
@@ -286,6 +336,25 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
             </View>
 
             <View style={{ height: 40 }} />
+
+            {/* DateTimePicker 레이어 */}
+            {showDatePicker && (
+                <DateTimePicker
+                    value={getDateFromString(editedDate)}
+                    mode="date"
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleDateChange}
+                />
+            )}
+            {showTimePicker && (
+                <DateTimePicker
+                    value={getTimeFromString(editedTime)}
+                    mode="time"
+                    is24Hour={true}
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={handleTimeChange}
+                />
+            )}
         </ScrollView>
     );
 };
@@ -339,6 +408,20 @@ const styles = StyleSheet.create({
         fontSize: 16,
         color: '#666',
         marginBottom: 20,
+    },
+    datePickerButton: {
+        backgroundColor: '#f8f9fa',
+        borderRadius: 8,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#4ECDC4',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    datePickerText: {
+        fontSize: 15,
+        color: '#333',
+        fontWeight: '500',
     },
     section: {
         backgroundColor: '#fff',
