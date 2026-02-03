@@ -116,7 +116,6 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
                                 key={event.id}
                                 style={styles.eventCard}
                                 onPress={() => navigation.navigate('Details', { eventId: event.id })}
-                                onLongPress={() => handleDeleteEvent(event.id)}
                             >
                                 <View style={styles.eventLeft}>
                                     {daysUntil !== null && (
@@ -128,20 +127,49 @@ const DashboardScreen: React.FC<DashboardScreenProps> = ({ navigation }) => {
                                                 styles.daysText,
                                                 daysUntil <= 3 && styles.daysTextUrgent,
                                             ]}>
-                                                {daysUntil === 0 ? 'D-Day' : `D-${daysUntil}`}
+                                                {daysUntil === 0 ? 'D-Day' : daysUntil > 0 ? `D-${daysUntil}` : `D+${Math.abs(daysUntil)}`}
                                             </Text>
                                         </View>
                                     )}
                                 </View>
                                 <View style={styles.eventContent}>
                                     <Text style={styles.eventName}>{event.event_name}</Text>
-                                    <Text style={styles.eventDate}>{formatDate(event.event_date)}</Text>
+                                    <Text style={styles.eventDate}>
+                                        {formatDate(event.event_date)} {event.event_time || ''}
+                                    </Text>
+                                    {event.child_tag && event.child_tag !== '없음' && (
+                                        <View style={styles.childBadge}>
+                                            <Text style={styles.childBadgeText}>👶 {event.child_tag}</Text>
+                                        </View>
+                                    )}
                                     {event.checklist_with_status && event.checklist_with_status.length > 0 && (
-                                        <Text style={styles.checklistCount}>
-                                            ✅ 준비물 {event.checklist_with_status.length}개
-                                        </Text>
+                                        <View style={styles.progressRow}>
+                                            <View style={styles.progressBarBg}>
+                                                <View
+                                                    style={[
+                                                        styles.progressBarFill,
+                                                        {
+                                                            width: `${(event.checklist_with_status.filter((i: any) => i.is_checked).length / event.checklist_with_status.length) * 100}%`,
+                                                            backgroundColor: event.checklist_with_status.filter((i: any) => i.is_checked).length === event.checklist_with_status.length ? '#10B981' : '#F59E0B'
+                                                        }
+                                                    ]}
+                                                />
+                                            </View>
+                                            <Text style={styles.progressText}>
+                                                {event.checklist_with_status.filter((i: any) => i.is_checked).length}/{event.checklist_with_status.length}
+                                            </Text>
+                                        </View>
                                     )}
                                 </View>
+                                <TouchableOpacity
+                                    style={styles.deleteButton}
+                                    onPress={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteEvent(event.id);
+                                    }}
+                                >
+                                    <Text style={styles.deleteButtonText}>🗑️</Text>
+                                </TouchableOpacity>
                             </TouchableOpacity>
                         );
                     })
@@ -261,6 +289,46 @@ const styles = StyleSheet.create({
         fontSize: 12,
         color: '#4ECDC4',
         marginTop: 4,
+    },
+    childBadge: {
+        backgroundColor: '#E8F0FE',
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 10,
+        alignSelf: 'flex-start',
+        marginTop: 4,
+    },
+    childBadgeText: {
+        fontSize: 11,
+        color: '#1967D2',
+    },
+    progressRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 6,
+    },
+    progressBarBg: {
+        flex: 1,
+        height: 6,
+        backgroundColor: '#E5E7EB',
+        borderRadius: 3,
+        marginRight: 8,
+    },
+    progressBarFill: {
+        height: 6,
+        borderRadius: 3,
+    },
+    progressText: {
+        fontSize: 11,
+        color: '#6B7280',
+        fontWeight: '600',
+    },
+    deleteButton: {
+        padding: 8,
+        marginLeft: 8,
+    },
+    deleteButtonText: {
+        fontSize: 18,
     },
     fab: {
         position: 'absolute',

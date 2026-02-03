@@ -17,7 +17,8 @@ import {
     updateChecklistItem,
     getChildren,
     addChecklistItem,
-    deleteChecklistItem
+    deleteChecklistItem,
+    deleteEvent
 } from '../services/api';
 
 interface EventDetailScreenProps {
@@ -127,6 +128,28 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleDeleteEvent = () => {
+        Alert.alert(
+            '일정 삭제',
+            '이 일정을 삭제하시겠습니까?',
+            [
+                { text: '취소', style: 'cancel' },
+                {
+                    text: '삭제',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await deleteEvent(eventId);
+                            navigation.goBack();
+                        } catch (error) {
+                            Alert.alert('오류', '삭제 중 오류가 발생했습니다.');
+                        }
+                    },
+                },
+            ]
+        );
     };
 
     // 날짜 선택 핸들러
@@ -262,6 +285,11 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
                 {isEditing && (
                     <TouchableOpacity style={styles.cancelButton} onPress={() => setIsEditing(false)}>
                         <Text style={styles.cancelButtonText}>취소</Text>
+                    </TouchableOpacity>
+                )}
+                {!isEditing && (
+                    <TouchableOpacity style={styles.deleteEventButton} onPress={handleDeleteEvent}>
+                        <Text style={styles.deleteEventButtonText}>🗑️ 일정 삭제</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -586,6 +614,20 @@ const styles = StyleSheet.create({
     cancelButtonText: {
         color: '#eb4d4b',
         fontSize: 14,
+    },
+    deleteEventButton: {
+        backgroundColor: '#FEE2E2',
+        paddingVertical: 12,
+        borderRadius: 12,
+        alignItems: 'center',
+        marginTop: 10,
+        borderWidth: 1,
+        borderColor: '#FECACA',
+    },
+    deleteEventButtonText: {
+        fontWeight: 'bold',
+        fontSize: 16,
+        color: '#DC2626',
     },
 });
 
