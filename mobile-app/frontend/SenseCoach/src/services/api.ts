@@ -1,10 +1,7 @@
 import axios from 'axios';
-import { Platform } from 'react-native';
 
-// 안드로이드 에뮬레이터에서는 10.0.2.2, iOS 시뮬레이터/실기기는 localhost
-const API_BASE_URL = Platform.OS === 'android'
-    ? 'http://10.0.2.2:8000'
-    : 'http://localhost:8000';
+// 프로덕션 API URL (Render.com)
+const API_BASE_URL = 'https://sense-coach-api.onrender.com';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
