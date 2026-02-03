@@ -44,3 +44,11 @@ Thumbs.db
 *.db
 *.sqlite
 *.sqlite3
+
+# Node.js
+node_modules/
+
+# Android Keystore
+*.keystore
+*.jks
+

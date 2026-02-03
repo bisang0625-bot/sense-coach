@@ -432,7 +432,37 @@ cd android
 
 ---
 
-## 문의사항
+---
+ 
+ ## 🚀 앱 성능 최적화 (중요)
+ 
+ Streamlit 기반 앱은 초기 로딩 속도 이슈("Cold Start")가 발생할 수 있습니다. 사용자 이탈을 막기 위해 다음 조치를 권장합니다.
+ 
+ ### 1. 서버 상시 가동 유지
+ - **필수 조치**: `DEPLOYMENT.md`의 "Streamlit 'Cold Start' 방지" 섹션을 참고하여 UptimeRobot을 설정하세요.
+ - 이렇게 하면 사용자가 앱을 켰을 때 "Waking up..." 화면 없이 바로 접속됩니다.
+ 
+ ### 2. 로딩 화면(Splash Screen) 활용
+ - React Native 앱 실행 직후 웹사이트가 로딩되는 동안 빈 화면이 보일 수 있습니다.
+ - `react-native-splash-screen` 라이브러리를 사용하여 로딩이 완료될 때까지 예쁜 로고 화면을 보여주세요.
+ 
+ ```javascript
+ // App.js 예시
+ import SplashScreen from 'react-native-splash-screen';
+ 
+ const App = () => {
+   useEffect(() => {
+     // 웹뷰 로딩 완료 후 숨김
+     SplashScreen.hide();
+   }, []);
+   
+   // ...
+ };
+ ```
+ 
+ ---
+ 
+ ## 문의사항
 추가 질문이 있으시면 다음 리소스를 활용하세요:
 - Apple Developer Support
 - Google Play Developer Support

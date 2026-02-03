@@ -129,7 +129,7 @@
 
 ### 7.5 권리 행사 방법
 - 앱 내 설정 메뉴에서 직접 수정/삭제
-- 이메일 문의: [support@sensecoach.app] (실제 이메일로 변경 필요)
+- 이메일 문의: vennaper@gmail.com
 
 ---
 
@@ -166,13 +166,8 @@
 본 앱의 개인정보 처리에 관한 문의는 아래로 연락주시기 바랍니다:
 
 ### 개인정보 보호책임자
-- **이름**: [책임자 이름]
-- **직책**: [직책]
-- **이메일**: [support@sensecoach.app] (실제 이메일로 변경 필요)
-
-### 개인정보 보호담당자
-- **이름**: [담당자 이름]
-- **이메일**: [privacy@sensecoach.app] (실제 이메일로 변경 필요)
+- **담당**: 눈치코치 운영팀
+- **이메일**: vennaper@gmail.com
 
 ---
 
@@ -216,8 +211,7 @@
 ---
 
 **연락처**  
-이메일: [support@sensecoach.app]  
-웹사이트: [https://sensecoach.app]
+이메일: vennaper@gmail.com
 
 ---
 
@@ -350,7 +344,7 @@ You can exercise the following rights:
 
 ### 7.5 How to Exercise Rights
 - Directly edit/delete in app settings menu
-- Email inquiry: [support@sensecoach.app] (please update with actual email)
+- Email inquiry: vennaper@gmail.com
 
 ---
 
@@ -387,13 +381,8 @@ You can exercise the following rights:
 For inquiries about personal information processing:
 
 ### Privacy Officer
-- **Name**: [Officer Name]
-- **Title**: [Title]
-- **Email**: [support@sensecoach.app] (please update with actual email)
-
-### Privacy Manager
-- **Name**: [Manager Name]
-- **Email**: [privacy@sensecoach.app] (please update with actual email)
+- **Department**: Sense Coach Operations Team
+- **Email**: vennaper@gmail.com
 
 ---
 
@@ -437,5 +426,4 @@ The Korean version of this Privacy Policy is the authoritative text.
 ---
 
 **Contact**  
-Email: [support@sensecoach.app]  
-Website: [https://sensecoach.app]
+Email: vennaper@gmail.com

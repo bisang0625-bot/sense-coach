@@ -261,8 +261,31 @@ source ~/.bashrc
 ```
 
 ---
-
-## 도메인 연결
+ 
+ ## Streamlit 'Cold Start' 방지 (필수)
+ 
+ Streamlit Community Cloud(무료)는 앱이 일정 시간 동안 사용되지 않으면 "절전 모드"로 진입합니다. 이 경우 앱을 다시 켤 때 "Waking up..." 화면이 표시되며 30초 이상 로딩 시간이 발생합니다.
+ **이는 사용자 경험에 치명적이므로, 아래 방법으로 반드시방지해야 합니다.**
+ 
+ ### 방법 1: Keep-Alive 설정 (UptimeRobot 사용) - 무료 & 추천
+ 
+ 외부 모니터링 서비스를 사용하여 5분마다 앱을 자동으로 방문하게 하여 절전 모드 진입을 막습니다.
+ 
+ 1. **[UptimeRobot](https://uptimerobot.com/) 접속 및 무료 가입**
+ 2. **"Add New Monitor" 클릭**
+ 3. 설정 입력:
+    - **Monitor Type**: `HTTP(s)`
+    - **Friendly Name**: `Sense Coach App`
+    - **URL (or IP)**: 배포된 Streamlit 앱 주소 (예: `https://sense-coach.streamlit.app`)
+    - **Monitoring Interval**: `5 minutes` (중요!)
+    - **Monitor Timeout**: `30 seconds`
+ 4. **"Create Monitor" 클릭**
+ 
+ 이제 UptimeRobot이 5분마다 앱을 깨워서 항상 켜져 있는 상태를 유지합니다.
+ 
+ ---
+ 
+ ## 도메인 연결
 
 ### Streamlit Cloud
 1. Streamlit Cloud 대시보드에서 앱 선택

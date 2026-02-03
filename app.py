@@ -753,9 +753,8 @@ def main():
         st.markdown("""
             <div style="font-size: 0.8rem; color: #888; text-align: center;">
                 <p>© 2026 눈치코치 알림장 (Sense Coach)</p>
-                <a href="https://github.com/bisang0625-bot/sense-coach/blob/main/privacy-policy.md" target="_blank" style="color: #888; text-decoration: none;">개인정보 처리방침</a> | 
-                <a href="#" style="color: #888; text-decoration: none;">이용약관</a><br>
-                문의: <a href="mailto:support@sensecoach.app" style="color: #888; text-decoration: none;">support@sensecoach.app</a>
+                <a href="https://github.com/bisang0625-bot/sense-coach/blob/main/privacy-policy.md" target="_blank" style="color: #888; text-decoration: none;">개인정보 처리방침</a><br>
+                문의: <a href="mailto:vennaper@gmail.com" style="color: #888; text-decoration: none;">vennaper@gmail.com</a>
             </div>
         """, unsafe_allow_html=True)
     
