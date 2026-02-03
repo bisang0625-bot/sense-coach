@@ -216,8 +216,7 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
                             style={styles.input}
                             value={editedName}
                             onChangeText={setEditedName}
-                            autoCorrect={false}
-                            autoCapitalize="none"
+                            placeholder="행사명 입력"
                         />
                         <View style={styles.row}>
                             <View style={{ flex: 1, marginRight: 8 }}>
@@ -280,7 +279,9 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
                     style={[styles.editToggleButton, isEditing && styles.saveButton]}
                     onPress={isEditing ? handleSave : () => setIsEditing(true)}
                 >
-                    <Text style={styles.editToggleText}>{isEditing ? '💾 저장하기' : '✏️ 편집하기'}</Text>
+                    <Text style={isEditing ? styles.saveButtonText : styles.editToggleText}>
+                        {isEditing ? '💾 저장하기' : '✏️ 편집하기'}
+                    </Text>
                 </TouchableOpacity>
                 {isEditing && (
                     <TouchableOpacity style={styles.cancelButton} onPress={() => setIsEditing(false)}>
@@ -322,6 +323,8 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
                         placeholder="항목 추가..."
                         value={newItemName}
                         onChangeText={setNewItemName}
+                        returnKeyType="done"
+                        onSubmitEditing={handleAddItem}
                     />
                     <TouchableOpacity style={styles.addItemButton} onPress={handleAddItem}>
                         <Text style={styles.addItemButtonText}>+</Text>
@@ -342,6 +345,12 @@ const EventDetailScreen: React.FC<EventDetailScreenProps> = ({ route, navigation
                         <View style={styles.section}>
                             <Text style={styles.sectionTitle}>💡 팁</Text>
                             <Text style={styles.content}>{event.tips}</Text>
+                        </View>
+                    )}
+                    {event.original_text && (
+                        <View style={styles.section}>
+                            <Text style={styles.sectionTitle}>📜 원문</Text>
+                            <Text style={styles.originalText}>{event.original_text}</Text>
                         </View>
                     )}
                 </>
@@ -606,6 +615,19 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 16,
         color: '#333',
+    },
+    saveButtonText: {
+        fontWeight: 'bold',
+        fontSize: 16,
+        color: '#fff',
+    },
+    originalText: {
+        fontSize: 14,
+        color: '#666',
+        lineHeight: 22,
+        backgroundColor: '#F8F9FA',
+        padding: 12,
+        borderRadius: 8,
     },
     cancelButton: {
         alignItems: 'center',

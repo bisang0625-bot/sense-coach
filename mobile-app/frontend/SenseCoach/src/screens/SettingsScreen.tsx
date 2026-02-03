@@ -117,7 +117,6 @@ const SettingsScreen: React.FC<SettingsScreenProps> = ({ navigation }) => {
                         value={newChildName}
                         onChangeText={setNewChildName}
                         placeholder="아이 이름 입력"
-                        autoCorrect={false}
                         returnKeyType="done"
                         onSubmitEditing={handleAddChild}
                     />

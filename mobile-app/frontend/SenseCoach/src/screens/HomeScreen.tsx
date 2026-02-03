@@ -175,8 +175,6 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
                         value={text}
                         onChangeText={setText}
                         textAlignVertical="top"
-                        autoCorrect={false}
-                        autoCapitalize="none"
                     />
                 </View>
 

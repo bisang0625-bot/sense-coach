@@ -205,8 +205,7 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ route, navigation }) => {
                                     value={event.event_name || ''}
                                     onChangeText={(val) => updateEventField(index, 'event_name', val)}
                                     editable={!event.is_saved}
-                                    autoCorrect={false}
-                                    autoCapitalize="none"
+                                    placeholder="행사명 입력"
                                 />
                             </View>
 
