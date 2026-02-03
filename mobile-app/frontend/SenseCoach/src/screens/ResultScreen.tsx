@@ -134,20 +134,13 @@ const ResultScreen: React.FC<ResultScreenProps> = ({ route, navigation }) => {
                     <View key={index} style={[styles.eventCard, event.is_saved && styles.eventCardSaved]}>
 
                         {/* 번역 섹션 - 접을 수 있는 UI */}
+                        {/* 🌐 번역 섹션 - 항상 펼쳐보이게 수정 */}
                         {event.translation ? (
-                            <View>
-                                <TouchableOpacity
-                                    style={styles.collapsibleHeader}
-                                    onPress={() => setExpandedTranslation(expandedTranslation === index ? null : index)}
-                                >
-                                    <Text style={styles.collapsibleTitle}>🌐 원문 번역 (한국어)</Text>
-                                    <Text style={styles.expandIcon}>{expandedTranslation === index ? '▲' : '▼'}</Text>
-                                </TouchableOpacity>
-                                {expandedTranslation === index && (
-                                    <View style={styles.translationBox}>
-                                        <Text style={styles.translationText}>{event.translation}</Text>
-                                    </View>
-                                )}
+                            <View style={styles.translationBox}>
+                                <View style={styles.sectionHeaderRow}>
+                                    <Text style={styles.collapsibleTitle}>🌐 원문 번역</Text>
+                                </View>
+                                <Text style={styles.translationText}>{event.translation}</Text>
                             </View>
                         ) : null}
 
@@ -341,6 +334,11 @@ const styles = StyleSheet.create({
     },
 
     // 번역 섹션
+    sectionHeaderRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
     collapsibleHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',

@@ -248,65 +248,58 @@ def parse_analysis_result(result, country):
             'translation': '', 'cultural_context': '', 'tips': '', 'memo': ''
         }
         
-        # 정규표현식으로 각 섹션 추출
-        if "📌" in raw_event:
-            m = re.search(r'📌\s*\*\*행사명\*\*:?\s*([^\n📅✅🌍💡]+)', raw_event)
-            if m: parsed_data['event_name'] = m.group(1).strip()
+    # 정규표현식으로 각 섹션 추출 (이모지 선택적 허용, 키워드 중심)
         
-        if "📅" in raw_event:
-            m = re.search(r'📅\s*\*\*일시\*\*:?\s*([^\n📌✅🌍💡]+)', raw_event)
-            if m:
-                date_str = m.group(1).strip()
-                # 간단한 날짜 추출 로직
-                date_match = re.search(r'\d{4}-\d{2}-\d{2}|\d{2}/\d{2}/\d{4}|\d{4}년\s*\d{1,2}월\s*\d{1,2}일', date_str)
-                if date_match:
-                    extracted = date_match.group(0)
-                    if '년' in extracted:
-                        parts = re.findall(r'\d+', extracted)
-                        if len(parts) >= 3:
-                            parsed_data['event_date'] = f"{parts[0]}-{parts[1].zfill(2)}-{parts[2].zfill(2)}"
-                    else:
-                        parsed_data['event_date'] = extracted
-                
-                time_match = re.search(r'(\d{1,2}:\d{2}|\d{1,2}시)', date_str)
-                if time_match: parsed_data['event_time'] = time_match.group(0)
+        # 1. 행사명
+        m_name = re.search(r'(?:📌|:)\s*\**행사명\**[:\s]*([^\n📅✅🌍💡🌐]+)', raw_event)
+        if m_name: parsed_data['event_name'] = m_name.group(1).strip()
         
-        if "✅" in raw_event:
-            m = re.search(r'✅\s*\*\*준비물 체크리스트\*\*:?\s*([^🌍💡📌📅]+)', raw_event, re.DOTALL)
-            if m:
-                items = re.findall(r'[-•]\s*([^\n]+)', m.group(1))
-                parsed_data['checklist_items'] = [i.strip() for i in items if is_valid_checklist_item(i)]
-        
-        # 나머지 섹션 추출 (번역, 문화적 배경, 팁)
-        # 🌐 번역 섹션
-        if "🌐" in raw_event:
-            m = re.search(r'🌐[^📌📅✅🌍💡]*?(.*?)(?=📌|📅|✅|🌍|💡|$)', raw_event, re.DOTALL)
-            if m:
-                text = m.group(1).strip()
-                text = re.sub(r'\*\*[^:*]+\*\*:?\s*', '', text).strip()
-                if text:
-                    parsed_data['translation'] = text
-        
-        # 🌍 Cultural Context 섹션
-        if "🌍" in raw_event:
-            m = re.search(r'🌍[^📌📅✅💡]*?(.*?)(?=📌|📅|✅|💡|$)', raw_event, re.DOTALL)
-            if m:
-                text = m.group(1).strip()
-                text = re.sub(r'\*\*[^:*]+\*\*:?\s*', '', text).strip()
-                if text:
-                    parsed_data['cultural_context'] = text
-        
-        # 💡 팁 섹션
-        if "💡" in raw_event:
-            m = re.search(r'💡[^📌📅✅🌍]*?(.*?)(?=📌|📅|✅|🌍|$)', raw_event, re.DOTALL)
-            if m:
-                text = m.group(1).strip()
-                text = re.sub(r'\*\*[^:*]+\*\*:?\s*', '', text).strip()
-                if text:
-                    parsed_data['tips'] = text
+        # 2. 일시
+        m_date = re.search(r'(?:📅|:)\s*\**일시\**[:\s]*([^\n📌✅🌍💡🌐]+)', raw_event)
+        if m_date:
+            date_str = m_date.group(1).strip()
+            # 날짜 추출
+            date_match = re.search(r'\d{4}-\d{2}-\d{2}|\d{2}/\d{2}/\d{4}|\d{4}년\s*\d{1,2}월\s*\d{1,2}일', date_str)
+            if date_match:
+                extracted = date_match.group(0)
+                if '년' in extracted:
+                    parts = re.findall(r'\d+', extracted)
+                    if len(parts) >= 3:
+                        parsed_data['event_date'] = f"{parts[0]}-{parts[1].zfill(2)}-{parts[2].zfill(2)}"
+                else:
+                    parsed_data['event_date'] = extracted
+            
+            # 시간 추출
+            time_match = re.search(r'(\d{1,2}:\d{2}|\d{1,2}시)', date_str)
+            if time_match: parsed_data['event_time'] = time_match.group(0)
+            
+        # 3. 준비물 체크리스트
+        m_check = re.search(r'(?:✅|:)\s*\**준비물(?: 체크리스트)?\**[:\s]*([^🌍💡🌐📌📅]+)', raw_event, re.DOTALL)
+        if m_check:
+            items = re.findall(r'[-•]\s*([^\n]+)', m_check.group(1))
+            parsed_data['checklist_items'] = [i.strip() for i in items if is_valid_checklist_item(i)]
+            
+        # 4. 번역 (🌐 또는 '원문 번역' 키워드)
+        # 헤더를 찾고, 다음 헤더(행사명, 일시, 준비물, 문화, 팁)가 나오기 전까지 추출
+        m_trans = re.search(r'(?:🌐|:)\s*\**원문\s*번역(?: \(한국어\))?\**[:\s]*(.*?)(?=(?:📌|📅|✅|🌍|💡|:?\s*\**행사명|:?\s*\**일시|:?\s*\**준비물|:?\s*\**Cultural|:?\s*\**문화|:?\s*\**실용적인|:?\s*\**팁)|$)', raw_event, re.DOTALL)
+        if m_trans:
+            text = m_trans.group(1).strip()
+            if text: parsed_data['translation'] = text
+
+        # 5. Cultural Context (🌍 또는 'Cultural'/'문화' 키워드)
+        m_context = re.search(r'(?:🌍|:)\s*\**(?:Cultural Context|문화적 배경)\**[:\s]*(.*?)(?=(?:📌|📅|✅|💡|:?\s*\**행사명|:?\s*\**일시|:?\s*\**준비물|:?\s*\**실용적인|:?\s*\**팁)|$)', raw_event, re.DOTALL)
+        if m_context:
+            text = m_context.group(1).strip()
+            if text: parsed_data['cultural_context'] = text
+            
+        # 6. 실용적인 팁 (💡 또는 '팁' 키워드)
+        m_tips = re.search(r'(?:💡|:)\s*\**(?:실용적인 팁|팁)\**[:\s]*(.*?)(?=(?:📌|📅|✅|🌍|:?\s*\**행사명|:?\s*\**일시|:?\s*\**준비물|:?\s*\**Cultural|:?\s*\**문화)|$)', raw_event, re.DOTALL)
+        if m_tips:
+            text = m_tips.group(1).strip()
+            if text: parsed_data['tips'] = text
         
         # 유의미한 데이터가 있는 경우만 추가
-        if parsed_data['event_name'] or parsed_data['event_date'] or parsed_data['checklist_items']:
+        if parsed_data['event_name'] or parsed_data['event_date'] or parsed_data['checklist_items'] or parsed_data['translation']:
             parsed_events.append(parsed_data)
             
     return parsed_events
